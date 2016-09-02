@@ -1,6 +1,6 @@
 # simple methods to process audio signals
 
-import DSP.resample
+import DSP.resample, DSP.arraysplit
 export mono, resample, duration, play, pitchshift, speedup, slowdown
 
 """
@@ -102,4 +102,20 @@ end
 """"""
 function slowdown(audio::SampleBuf, ratio::Real, windowsize::Int = 1024, hopsize::Int = windowsize >> 2; kwargs...)
     speedup(audio, 1.0 / ratio, windowsize, hopsize; kwargs...)
+end
+
+""""""
+function zero_crossing_rate(audio::SampleBuf, framesize::Int = 1024, hopsize::Int = framesize >> 2)
+    dims = collect(size(audio.data))
+    dims[1] = nframes(dims[1], framesize, hopsize)
+    result = zeros(Float64, tuple(dims...))
+    @inbounds for channel in CartesianRange(size(result)[2:end])
+        array = slice(audio.data, :, channel.I...)
+        segments = FrameView{AbstractVector}(array, framesize, hopsize)
+        for i in 1:size(result, 1)
+            segment = segments[i]
+            result[(i, channel.I...)...] = zero_crossings(segment) / length(segment)
+        end
+    end
+    result
 end
