@@ -3,7 +3,11 @@
 hertz(value::Real) = value * Hz
 hertz{F <: Real}(value::SIUnits.SIQuantity{F,0,0,-1,0,0,0,0,0,0}) = value
 
+tofloat{T}(array::AbstractArray{T}) = map(Float32, array)
+tofloat(array::AbstractArray{Float32}) = array
+
 fft_frequencies(samplerate::Real, nfft::Int) = collect(linspace(0f0, samplerate / 2f0, (nfft >> 1) + 1))
+
 
 """returns the number of frames when the signal is partitioned into overlapping frames"""
 nframes(length::Int, framesize::Int, hopsize::Int) = div(length - framesize, hopsize) + 1

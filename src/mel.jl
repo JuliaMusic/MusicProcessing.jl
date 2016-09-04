@@ -86,27 +86,28 @@ function mel(samplerate::Real, nfft::Int, nmels::Int = 128, fmin::Real = 0f0, fm
     weights
 end
 
-function melspectrogram(audio::SampleBuf, nmels::Int = 128,
-                        windowsize::Int = 1024, hopsize::Int = windowsize >> 1;
-                        fmin::Real = 0f0, fmax::Real = audio.samplerate.val / 2f0)
+function melspectrogram{T}(audio::SampleBuf{T, 1}, windowsize::Int = 1024, hopsize::Int = windowsize >> 2;
+                        nmels::Int = 128, fmin::Real = 0f0, fmax::Real = audio.samplerate.val / 2f0)
     samplerate = audio.samplerate.val
     nfft = DSP.nextfastfft(windowsize)
-    data = mel(samplerate, nfft, nmels, fmin, fmax) * stft(audio, windowsize, hopsize)
+    S = spectrogram(audio, windowsize, hopsize).power
+    data = mel(samplerate, nfft, nmels, fmin, fmax) * S
     nframes = size(data, 2)
-    MelSpectrogram(abs(data), linspace(hz_to_mel(fmin)[1], hz_to_mel(fmax)[1], nmels), (0.0:nframes-1) * hopsize / samplerate)
+    MelSpectrogram(data, linspace(hz_to_mel(fmin)[1], hz_to_mel(fmax)[1], nmels), (0.0:nframes-1) * hopsize / samplerate)
 end
 
-function mfcc(audio::SampleBuf, nmfcc::Int = 20, nmels::Int = 128,
-              windowsize::Int = 1024, hopsize::Int = windowsize >> 1;
-              fmin::Real = 0f0, fmax::Real = audio.samplerate.val / 2f0)
-
+function mfcc{T}(audio::SampleBuf{T, 1}, windowsize::Int = 1024, hopsize::Int = windowsize >> 2;
+              nmfcc::Int = 20, nmels::Int = 128, fmin::Real = 0f0, fmax::Real = audio.samplerate.val / 2f0)
     if nmfcc >= nmels
         error("number of mfcc components should be less than the number of mel frequency bins")
     end
 
-    M = melspectrogram(audio, nmels, windowsize, hopsize; fmin = fmin, fmax = fmax)
+    M = melspectrogram(audio, windowsize, hopsize; nmels = nmels, fmin = fmin, fmax = fmax)
     mfcc = dct(nmfcc, nmels) * power(M)
-    mfcc = mapslices(x -> x/norm(x), mfcc, 1)
+
+    for frame in 1:size(mfcc, 2)
+        mfcc[:, frame] /= norm(mfcc[:, frame])
+    end
 
     MFCC(mfcc, 1:nmfcc, time(M))
 end

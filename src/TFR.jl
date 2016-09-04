@@ -42,7 +42,7 @@ function stft{T}(audio::SampleBuf{T, 1, Hertz},
                  hopsize::Int = windowsize >> 2;
                  window = hanning, kwargs...)
     noverlap = windowsize - hopsize
-    data = map(Float32, audio.data)
+    data = tofloat(audio.data)
     DSP.stft(data, windowsize, noverlap; window = window, kwargs...)
 end
 
@@ -54,7 +54,7 @@ function stft{T}(audio::SampleBuf{T, 2, Hertz},
     noverlap = windowsize - hopsize
 
     stft = Array(Matrix, nchannels)
-        data = map(Float32, audio.data)
+    data = tofloat(audio.data)
     for i in 1:nchannels
         stft[i] = DSP.stft(data[:, i], windowsize, noverlap; kwargs...)
     end
@@ -79,7 +79,7 @@ end
     end
     window
 end
-@inline w(window::Void,size) = 1
+@inline w(window::Void, size) = ones(size)
 
 
 """
@@ -106,23 +106,30 @@ function istft{T <: AbstractFloat}(stft::Array{Complex{T}, 2},
       error("window size should be less than or equal to nfft")
     end
 
-    window = w(window, windowsize)
+    window::Vector{T} = map(T, w(window, windowsize))
 
     columns = size(stft, 2)
     audio = zeros(T, windowsize + hopsize * (columns - 1))
     weights = zeros(audio)
+    spectrum = zeros(T, nfft)
 
-    for i in 1:columns
-        range = (i-1) * hopsize + (1:windowsize)
-        spectrum = irfft(stft[:, i], nfft)[1:windowsize]
+    nbins = size(stft, 1)
+    base = Base.unsafe_convert(Ptr{Complex{T}}, stft)
+    stride = nbins * sizeof(Complex{T})
 
-        audio[range] += window .* spectrum
-        weights[range] += window
+    @inbounds for i in 1:columns
+        irfft!(spectrum, base + stride * (i-1), nfft)
+
+        left = (i-1) * hopsize
+        for j in 1:windowsize
+            audio[left + j] += window[j] * spectrum[j]
+            weights[left + j] += window[j]
+        end
     end
 
     @inbounds for i in 1:length(audio)
         if weights[i] > eps(T)
-            audio[i] /= weights[i]
+            audio[i] /= weights[i] * nbins
         end
     end
 
@@ -181,40 +188,55 @@ function phase_vocoder{T <: AbstractFloat}(stft::Array{Complex{T}, 2},
     nbins = size(stft, 1)
     nframes = size(stft, 2)
     nfft = (nbins - 1) * 2
-    timesteps = 1.0:speed:nframes
+    timesteps = 1f0:speed:nframes
     stretched = zeros(Complex{T}, nbins, length(timesteps))
-    phase_advance = linspace(0, π * hopsize, nbins)
+    phase_advance = collect(linspace(0f0, T(π * hopsize), nbins))
     phase_acc = angle(stft[:, 1])
+    cis_phase = Array(Complex{T}, size(phase_acc))
+    angle1 = Array(T, nbins)
+    angle2 = Array(T, nbins)
+    dphase = Array(T, nbins)
+    mag = Array(T, nbins)
+    twopi = T(2π)
 
     @inbounds for (t, step) in enumerate(timesteps)
         left = floor(Int, step)
         right = left + 1
-        columns = stft[:, left:min(right, nframes)]
 
         # weighting for linear magnitude interpolation
-        alpha = step % 1.0
-        if size(columns, 2) == 2
-            mag = ((1.0 - alpha) * abs(columns[:, 1]) + alpha * abs(columns[:, 2]))
+        alpha = step % 1f0
+        if left < nframes
+            for i = 1:nbins
+                mag[i] = (1f0 - alpha) * abs(stft[i, left]) + alpha * abs(stft[i, right])
+            end
         else
-            mag = columns[:, 1]
+            for i = 1:nbins
+                mag[i] = abs(stft[i, left])
+            end
         end
 
         # store to output array
-        stretched[:, t] = mag .* exp(phase_acc * im)
+        cis!(cis_phase, phase_acc)
+        multiply!(cis_phase, cis_phase, mag)
+        for i in 1:nbins
+            stretched[i, t] = cis_phase[i]
+        end
 
-        # nothing to do more
         if t == size(stretched, 2)
+            # nothing to do more
             break
         end
 
-        # compute phase advance
-        dphase = angle(columns[:, 2]) - angle(columns[:, 1]) - phase_advance
-
-        # wrap to -pi:pi range
-        dphase -= 2π * round(dphase / 2π)
-
-        # accumulate phase
-        phase_acc += phase_advance + dphase
+        for i in 1:nbins
+            angle1[i] = angle(stft[i, left])
+            angle2[i] = angle(stft[i, right])
+            # compute phase advance
+            dphase[i] = angle2[i] - angle1[i] - phase_advance[i]
+            # wrap to -pi:pi range
+            dphase[i] -= twopi * round(dphase[i] / twopi)
+            # accumulate phase
+            phase_acc[i] += phase_advance[i] + dphase[i]
+        end
     end
 
     stretched

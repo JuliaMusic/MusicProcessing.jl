@@ -40,10 +40,12 @@ end
 
 """resample audio with a different sample rate"""
 function resample{T, F}(audio::SampleBuf{T, 2, Hertz}, samplerate::SIUnits.SIQuantity{F,0,0,-1,0,0,0,0,0,0})
-    sr = hertz(samplerate)
+    sr = hertz(float(samplerate))
+    rate = sr / audio.samplerate
+    filter = DSP.resample_filter(rate, 512, 1.0, 140)
     SampleBuf{T, 2, SIUnits.SIQuantity{F,0,0,-1,0,0,0,0,0,0}}(
         mapslices(audio.data, 1) do data
-            DSP.resample(data, sr / audio.samplerate)
+            DSP.resample(data, rate, filter)
         end,
         sr
     )
@@ -51,7 +53,7 @@ end
 
 """resample audio with a different sample rate"""
 function resample{T, F}(audio::SampleBuf{T, 1, Hertz}, samplerate::SIUnits.SIQuantity{F,0,0,-1,0,0,0,0,0,0})
-    sr = hertz(samplerate)
+    sr = hertz(float(samplerate))
     SampleBuf{T, 1, SIUnits.SIQuantity{F,0,0,-1,0,0,0,0,0,0}}(
         DSP.resample(audio.data, sr / audio.samplerate),
         sr
