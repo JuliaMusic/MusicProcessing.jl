@@ -129,7 +129,7 @@ function istft{T <: AbstractFloat}(stft::Array{Complex{T}, 2},
 
     @inbounds for i in 1:length(audio)
         if weights[i] > eps(T)
-            audio[i] /= weights[i] * nbins
+            audio[i] /= weights[i]
         end
     end
 
