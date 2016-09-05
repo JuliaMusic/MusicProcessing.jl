@@ -49,10 +49,11 @@ function dct(nfilters::Int, ninput::Int)
 end
 
 """returns the number of times that the value changes its sign"""
-function zero_crossings(array::AbstractVector)
+function zero_crossings{T<:Real}(array::AbstractVector{T}, size::Int = length(array), offset::Int = 0)
     result = 0
     previous = 0
-    @inbounds for number in array
+    for i in offset + (1:size)
+        number = array[i]
         sgn = number == 0 ? 0 : number > 0 ? 1 : -1
         if sgn != previous
             result += 1
