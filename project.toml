@@ -1,0 +1,13 @@
+name = "MusicProcessing"
+uuid = "   "
+repo = "https://github.com/JuliaMusic/MusicProcessing.jl.git"
+version = "0.0.1"
+
+[compat]
+julia = "1.4.2"
+
+[extras]
+Test = "   "
+
+[targets]
+test = ["Test"]
