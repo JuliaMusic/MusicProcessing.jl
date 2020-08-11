@@ -1,7 +1,4 @@
 
-import Base.show
-export show
-
 # methods to translate
 
 """return the frequency ticks of a spectrogram, rounded to the nearest integers"""
@@ -40,7 +37,7 @@ function draw_heatmap(tfr::DSP.Periodograms.TFR)
 end
 
 """Display a spectrogram"""
-function show(io::IO, mime::MIME"image/png", tfr::R) where {R <: DSP.Periodograms.TFR}
+function Base.show(io::IO, mime::MIME"image/png", tfr::R) where {R <: DSP.Periodograms.TFR}
     @eval import PyPlot
     PyPlot.ioff()
     PyPlot.figure(figsize=(8, 4))
@@ -49,7 +46,7 @@ function show(io::IO, mime::MIME"image/png", tfr::R) where {R <: DSP.Periodogram
 end
 
 """Display multichannel spectrogram"""
-function show(io::IO, mime::MIME"image/png", tfrs::Array{R, 1}) where {R <: DSP.Periodograms.TFR}
+function Base.show(io::IO, mime::MIME"image/png", tfrs::Array{R, 1}) where {R <: DSP.Periodograms.TFR}
     nchannels = length(tfrs)
 
     @eval import PyPlot
