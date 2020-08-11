@@ -1,7 +1,4 @@
 
-import Base.writemime
-export writemime
-
 # methods to translate
 
 """return the frequency ticks of a spectrogram, rounded to the nearest integers"""
@@ -40,16 +37,16 @@ function draw_heatmap(tfr::DSP.Periodograms.TFR)
 end
 
 """Display a spectrogram"""
-function writemime{R <: DSP.Periodograms.TFR}(io::IO, mime::MIME"image/png", tfr::R)
+function Base.show(io::IO, mime::MIME"image/png", tfr::R) where {R <: DSP.Periodograms.TFR}
     @eval import PyPlot
     PyPlot.ioff()
     PyPlot.figure(figsize=(8, 4))
     draw_heatmap(tfr)
-    writemime(io, mime, PyPlot.gcf())
+    show(io, mime, PyPlot.gcf())
 end
 
 """Display multichannel spectrogram"""
-function writemime{R <: DSP.Periodograms.TFR}(io::IO, mime::MIME"image/png", tfrs::Array{R, 1})
+function Base.show(io::IO, mime::MIME"image/png", tfrs::Array{R, 1}) where {R <: DSP.Periodograms.TFR}
     nchannels = length(tfrs)
 
     @eval import PyPlot
@@ -65,5 +62,5 @@ function writemime{R <: DSP.Periodograms.TFR}(io::IO, mime::MIME"image/png", tfr
             PyPlot.gca()[:spines]["bottom"][:set_visible](false)
         end
     end
-    writemime(io, mime, PyPlot.gcf())
+    show(io, mime, PyPlot.gcf())
 end

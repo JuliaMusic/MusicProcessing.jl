@@ -2,6 +2,7 @@ module MusicProcessing
 
 using DSP
 using FixedPointNumbers
+using Requires
 using SIUnits
 using SIUnits.ShortUnits
 using SampledSignals
@@ -27,6 +28,8 @@ include("mel.jl")
 include("constantq.jl")
 include("chroma.jl")
 
-include("display.jl")
+function __init__()
+    @require PyPlot="d330b81b-6aea-500a-939a-2ce795aea3ee" include("display.jl")
+end
 
 end # module
