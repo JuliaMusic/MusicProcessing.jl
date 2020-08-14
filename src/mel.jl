@@ -1,28 +1,28 @@
-
+import FFTW.Frequencies
 export melspectrogram, mfcc
 
 """The Mel spectrogram"""
-type MelSpectrogram{T, F <: Union{Frequencies,Range}} <: DSP.Periodograms.TFR{T}
+struct MelSpectrogram{T, F <: Union{Frequencies,AbstractRange}} <: DSP.Periodograms.TFR{T}
     power::Matrix{T}
     mels::F
-    time::FloatRange{Float64}
+    time::StepRangeLen{Float64}
 end
 heatmap(tfr::MelSpectrogram) = log10(tfr.power)
 DSP.freq(tfr::MelSpectrogram) = tfr.mels
 Base.time(tfr::MelSpectrogram) = tfr.time
 
 """A TFR subtype where each column represents an MFCC vector"""
-type MFCC{T, F <: Union{Frequencies,Range}} <: DSP.Periodograms.TFR{T}
+struct MFCC{T, F <: Union{Frequencies,AbstractRange}} <: DSP.Periodograms.TFR{T}
     mfcc::Matrix{T}
     number::F
-    time::FloatRange{Float64}
+    time::StepRangeLen{Float64}
 end
 heatmap(tfr::MFCC) = tfr.mfcc
 DSP.freq(tfr::MFCC) = tfr.number
 Base.time(tfr::MFCC) = tfr.time
 
 """"""
-function hz_to_mel{F <: Real}(frequencies::Union{F, AbstractArray{F}})
+function hz_to_mel(frequencies::Union{F, AbstractArray{F}}) where {F <: Real}
     f_min = 0f0
     f_sp = 200f0 / 3
 
@@ -42,7 +42,7 @@ function hz_to_mel{F <: Real}(frequencies::Union{F, AbstractArray{F}})
 end
 
 """"""
-function mel_to_hz{F <: Real}(mels::Union{F, AbstractArray{F}})
+function mel_to_hz(mels::Union{F, AbstractArray{F}}) where {F <: Real}
     f_min = 0f0
     f_sp = 200f0 / 3
     frequencies = collect(f_min + f_sp * mels)
@@ -86,8 +86,8 @@ function mel(samplerate::Real, nfft::Int, nmels::Int = 128, fmin::Real = 0f0, fm
     weights
 end
 
-function melspectrogram{T}(audio::SampleBuf{T, 1}, windowsize::Int = 1024, hopsize::Int = windowsize >> 2;
-                        nmels::Int = 128, fmin::Real = 0f0, fmax::Real = audio.samplerate.val / 2f0)
+function melspectrogram(audio::SampleBuf{T, 1}, windowsize::Int = 1024, hopsize::Int = windowsize >> 2;
+                        nmels::Int = 128, fmin::Real = 0f0, fmax::Real = audio.samplerate.val / 2f0) where T
     samplerate = audio.samplerate.val
     nfft = DSP.nextfastfft(windowsize)
     S = spectrogram(audio, windowsize, hopsize).power
@@ -96,8 +96,8 @@ function melspectrogram{T}(audio::SampleBuf{T, 1}, windowsize::Int = 1024, hopsi
     MelSpectrogram(data, linspace(hz_to_mel(fmin)[1], hz_to_mel(fmax)[1], nmels), (0.0:nframes-1) * hopsize / samplerate)
 end
 
-function mfcc{T}(audio::SampleBuf{T, 1}, windowsize::Int = 1024, hopsize::Int = windowsize >> 2;
-              nmfcc::Int = 20, nmels::Int = 128, fmin::Real = 0f0, fmax::Real = audio.samplerate.val / 2f0)
+function mfcc(audio::SampleBuf{T, 1}, windowsize::Int = 1024, hopsize::Int = windowsize >> 2;
+              nmfcc::Int = 20, nmels::Int = 128, fmin::Real = 0f0, fmax::Real = audio.samplerate.val / 2f0) where T
     if nmfcc >= nmels
         error("number of mfcc components should be less than the number of mel frequency bins")
     end

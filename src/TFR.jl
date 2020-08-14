@@ -4,20 +4,20 @@ import DSP.spectrogram, DSP.stft
 export spectrogram, stft, istft, phase_vocoder
 
 """"""
-function spectrogram{T}(audio::SampleBuf{T, 1, Hertz},
+function spectrogram(audio::SampleBuf{T, 1},
                         windowsize::Int = 1024,
                         hopsize::Int = windowsize >> 2;
-                        window = hanning, kwargs...)
+                        window = hanning, kwargs...) where T
     noverlap = windowsize - hopsize
     data = map(Float32, audio.data)
     DSP.spectrogram(data, windowsize, noverlap; fs = audio.samplerate.val, window = window, kwargs...)
 end
 
 """"""
-function spectrogram{T}(audio::SampleBuf{T, 2, Hertz},
+function spectrogram(audio::SampleBuf{T, 2},
                         windowsize::Int = 1024,
                         hopsize::Int = windowsize >> 2;
-                        window = hanning, kwargs...)
+                        window = hanning, kwargs...) where T
     noverlap = windowsize - hopsize
     data = map(Float32, audio.data)
     (mapslices(data, 1) do data
@@ -26,10 +26,10 @@ function spectrogram{T}(audio::SampleBuf{T, 2, Hertz},
 end
 
 """"""
-function spectrogram{T, N}(audio::SampleBuf{T, N, Hertz},
-                           windowsize::Seconds,
-                           hopsize::Seconds = windowsize / 4;
-                           kwargs...)
+function spectrogram(audio::SampleBuf{T, N},
+                           windowsize::Real,
+                           hopsize::Real = windowsize / 4;
+                           kwargs...) where {T, N}
     w = round(Int, windowsize * audio.samplerate)
     h = round(Int, hopsize * audio.samplerate)
     spectrogram(audio, w, h; kwargs...)
@@ -37,19 +37,19 @@ end
 
 
 """"""
-function stft{T}(audio::SampleBuf{T, 1, Hertz},
+function stft(audio::SampleBuf{T, 1},
                  windowsize::Int = 1024,
                  hopsize::Int = windowsize >> 2;
-                 window = hanning, kwargs...)
+                 window = hanning, kwargs...) where T
     noverlap = windowsize - hopsize
     data = tofloat(audio.data)
     DSP.stft(data, windowsize, noverlap; window = window, kwargs...)
 end
 
 """"""
-function stft{T}(audio::SampleBuf{T, 2, Hertz},
+function stft(audio::SampleBuf{T, 2},
                  windowsize::Int = 1024,
-                 hopsize::Int = windowsize >> 2; kwargs...)
+                 hopsize::Int = windowsize >> 2; kwargs...) where T
     nchannels = SampledSignals.nchannels(audio)
     noverlap = windowsize - hopsize
 
@@ -62,9 +62,9 @@ function stft{T}(audio::SampleBuf{T, 2, Hertz},
 end
 
 """"""
-function stft{T, N}(audio::SampleBuf{T, N, Hertz},
-                    windowsize::Seconds,
-                    hopsize::Seconds = windowsize / 4; kwargs...)
+function stft(audio::SampleBuf{T, N},
+                    windowsize::Real,
+                    hopsize::Real = windowsize / 4; kwargs...) where {T, N}
     w = round(Int, windowsize * audio.samplerate)
     h = round(Int, hopsize * audio.samplerate)
     stft(audio, w, h; kwargs...)
@@ -79,7 +79,7 @@ end
     end
     window
 end
-@inline w(window::Void, size) = ones(size)
+@inline w(window::Nothing, size) = ones(size)
 
 
 """
@@ -89,18 +89,18 @@ Reconstruct a mono audio from its STFT.
 
 # Arguments
 * `stft::Array{Complex{T}, 2}`: the STFT matrix, usually having (1+nfft/2) rows
-* `samplerate::Union{Real, Hertz}`: Sample rate of the resulting audio
+* `samplerate::Real`: Sample rate of the resulting audio
 * `windowsize::Int`: window size used for STFT. (default: nfft)
 * `hopsize::Int`: number of frames between STFT columns (default: windowsize/4)
 * `nfft::Int`: the FFT size (default: 2*(size(stft,1)-1))
-* `window::Union{Function, AbstractVector, Void}`: function or vector that has the window used for STFT (default: uniform window)
+* `window::Union{Function, AbstractVector, Nothing}`: function or vector that has the window used for STFT (default: uniform window)
 """
-function istft{T <: AbstractFloat}(stft::Array{Complex{T}, 2},
-                                   samplerate::Union{Real, Hertz},
+function istft(stft::Array{Complex{T}, 2},
+                                   samplerate::Real,
                                    windowsize::Int = 2 * (size(stft, 1) - 1),
                                    hopsize::Int = windowsize >> 2;
                                    nfft::Int = windowsize,
-                                   window::Union{Function, AbstractVector, Void} = hanning)
+                                   window::Union{Function, AbstractVector, Nothing} = hanning) where {T <: AbstractFloat}
 
     if windowsize > nfft
       error("window size should be less than or equal to nfft")
@@ -133,7 +133,7 @@ function istft{T <: AbstractFloat}(stft::Array{Complex{T}, 2},
         end
     end
 
-    SampleBuf{T, 1, Hertz}(audio, hertz(samplerate))
+    SampleBuf{T, 1}(audio, samplerate)
 end
 
 """
@@ -143,16 +143,16 @@ Reconstruct a multichannel audio from its STFT.
 
 # Arguments
 * `stft::Array{Complex{T}, 3}`: the STFT matrix, usually having (1+nfft/2) rows
-* `samplerate::Union{Real, Hertz}`: Sample rate of the resulting audio
+* `samplerate::Real`: Sample rate of the resulting audio
 * `windowsize::Int`: window size used for STFT. (default: nfft)
 * `hopsize::Int`: number of frames between STFT columns (default: windowsize/4)
 * `nfft::Int`: the FFT size (default: 2*(size(stft,1)-1))
-* `window::Union{Function, AbstractVector, Void}`: function or vector that has the window used for STFT (default: uniform window)
+* `window::Union{Function, AbstractVector, Nothing}`: function or vector that has the window used for STFT (default: uniform window)
 """
-function istft{T <: AbstractFloat}(stft::Array{Complex{T}, 3},
-                                   samplerate::Union{Real, Hertz},
+function istft(stft::Array{Complex{T}, 3},
+                                   samplerate::Real,
                                    windowsize::Int = 2 * (size(stft, 1) - 1),
-                                   hopsize::Int = windowsize >> 2; kwargs...)
+                                   hopsize::Int = windowsize >> 2; kwargs...) where {T <: AbstractFloat}
     nchannels = size(stft, 3)
     buffers = cell(nchannels)
 
@@ -169,9 +169,9 @@ function istft{T <: AbstractFloat}(stft::Array{Complex{T}, 3},
     end
 
     # concatenate channels
-    SampleBuf{T, 2, Hertz}(
+    SampleBuf{T, 2}(
         audio,
-        hertz(samplerate)
+        samplerate
     )
 end
 
@@ -181,9 +181,9 @@ end
 
 Phase vocoder. Given an STFT matrix, speed it up by a factor.
 """
-function phase_vocoder{T <: AbstractFloat}(stft::Array{Complex{T}, 2},
+function phase_vocoder(stft::Array{Complex{T}, 2},
                                            speed::Real,
-                                           hopsize::Int = (size(stft, 1) - 1) >> 1)
+                                           hopsize::Int = (size(stft, 1) - 1) >> 1) where {T <: AbstractFloat}
 
     nbins = size(stft, 1)
     nframes = size(stft, 2)
@@ -247,9 +247,9 @@ end
 
 Phase vocoder. Given an STFT matrix, speed it up by a factor.
 """
-function phase_vocoder{T <: AbstractFloat}(stft::Array{Complex{T}, 3},
+function phase_vocoder(stft::Array{Complex{T}, 3},
                                            speed::Real,
-                                           hopsize::Int = (size(stft, 1) - 1) >> 1)
+                                           hopsize::Int = (size(stft, 1) - 1) >> 1) where {T <: AbstractFloat}
     mapslices(stft, 1:2) do stft
         phase_vocoder(stft, speed, hopsize)
     end
