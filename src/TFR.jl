@@ -27,11 +27,11 @@ end
 
 """"""
 function spectrogram(audio::SampleBuf{T, N},
-                           windowsize::Real,
-                           hopsize::Real = windowsize / 4;
+                           windowsize::Seconds,
+                           hopsize::Seconds = windowsize / 4;
                            kwargs...) where {T, N}
-    w = round(Int, windowsize * audio.samplerate)
-    h = round(Int, hopsize * audio.samplerate)
+    w = round(Int, ustrip(windowsize) * audio.samplerate)
+    h = round(Int, ustrip(hopsize) * audio.samplerate)
     spectrogram(audio, w, h; kwargs...)
 end
 
@@ -63,10 +63,10 @@ end
 
 """"""
 function stft(audio::SampleBuf{T, N},
-                    windowsize::Real,
-                    hopsize::Real = windowsize / 4; kwargs...) where {T, N}
-    w = round(Int, windowsize * audio.samplerate)
-    h = round(Int, hopsize * audio.samplerate)
+                    windowsize::Seconds,
+                    hopsize::Seconds = windowsize / 4; kwargs...) where {T, N}
+    w = round(Int, ustrip(windowsize) * audio.samplerate)
+    h = round(Int, ustrip(hopsize) * audio.samplerate)
     stft(audio, w, h; kwargs...)
 end
 
@@ -136,6 +136,21 @@ function istft(stft::Array{Complex{T}, 2},
     SampleBuf{T, 1}(audio, samplerate)
 end
 
+
+function istft(stft::Array{Complex{T}, 2},
+                                   samplerate::Hertz,
+                                   windowsize::Int = 2 * (size(stft, 1) - 1),
+                                   hopsize::Int = windowsize >> 2;
+                                   nfft::Int = windowsize,
+                                   window::Union{Function, AbstractVector, Nothing} = hanning) where {T <: AbstractFloat}
+    istft(stft,
+            ustrip(samplerate),
+            windowsize,
+            hopsize,
+            nfft,
+            window)
+end
+
 """
     istft(stft, samplerate, windowsize, hopsize; window)
 
@@ -175,6 +190,17 @@ function istft(stft::Array{Complex{T}, 3},
     )
 end
 
+
+function istft(stft::Array{Complex{T}, 3},
+                                   samplerate::Hertz,
+                                   windowsize::Int = 2 * (size(stft, 1) - 1),
+                                   hopsize::Int = windowsize >> 2; kwargs...) where {T <: AbstractFloat}
+    istft(stft,
+            ustrip(samplerate),
+            windowsize,
+            hopsize;
+            kwargs...)
+end
 
 """
     phase_vocoder(stft, speed, hopsize)
