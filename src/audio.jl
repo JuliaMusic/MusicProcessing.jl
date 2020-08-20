@@ -8,18 +8,18 @@ export mono, resample, duration, play, pitchshift, speedup, slowdown, zero_cross
 
 convert a multichannel audio to mono
 """
-function mono{T <: AbstractFloat}(audio::SampleBuf{T, 2, Hertz})
-    SampleBuf{T, 1, Hertz}(
+function mono(audio::SampleBuf{T, 2}) where {T <: AbstractFloat}
+    SampleBuf{T, 1}(
         mean(audio.data, 2)[:],
         audio.samplerate
     )
 end
 
 # special code for fixed-point samples, to avoid overflow
-function mono{T <: Fixed}(audio::SampleBuf{T, 2, Hertz})
+function mono(audio::SampleBuf{T, 2}) where {T <: Fixed}
     nchannels = SampledSignals.nchannels(audio)
     if nchannels == 1
-        SampleBuf{T, 1, Hertz}(audio.data[:], audio.samplerate)
+        SampleBuf{T, 1}(audio.data[:], audio.samplerate)
     elseif nchannels == 2
         nsamples = SampledSignals.nframes(audio)
         buffer = Array(T, nsamples)
@@ -29,9 +29,9 @@ function mono{T <: Fixed}(audio::SampleBuf{T, 2, Hertz})
             m = (a >> 1) + (b >> 1) + (a & b & 1)
             @inbounds buffer[i] = T(m, 0)
         end
-        SampleBuf{T, 1, Hertz}(buffer, audio.samplerate)
+        SampleBuf{T, 1}(buffer, audio.samplerate)
     else
-        SampleBuf{T, 1, Hertz}(
+        SampleBuf{T, 1}(
             map(T, mean(map(Float32, audio.data))[:]),
             audio.samplerate
         )
@@ -39,24 +39,22 @@ function mono{T <: Fixed}(audio::SampleBuf{T, 2, Hertz})
 end
 
 """resample audio with a different sample rate"""
-function resample{T, F}(audio::SampleBuf{T, 2, Hertz}, samplerate::SIUnits.SIQuantity{F,0,0,-1,0,0,0,0,0,0})
-    sr = hertz(float(samplerate))
-    rate = sr / audio.samplerate
+function resample(audio::SampleBuf{T, 2}, samplerate::Real) where T
+    rate = samplerate / audio.samplerate
     filter = DSP.resample_filter(rate, 512, 1.0, 140)
-    SampleBuf{T, 2, SIUnits.SIQuantity{F,0,0,-1,0,0,0,0,0,0}}(
+    SampleBuf{T, 2}(
         mapslices(audio.data, 1) do data
             DSP.resample(data, rate, filter)
         end,
-        sr
+        samplerate
     )
 end
 
 """resample audio with a different sample rate"""
-function resample{T, F}(audio::SampleBuf{T, 1, Hertz}, samplerate::SIUnits.SIQuantity{F,0,0,-1,0,0,0,0,0,0})
-    sr = hertz(float(samplerate))
-    SampleBuf{T, 1, SIUnits.SIQuantity{F,0,0,-1,0,0,0,0,0,0}}(
-        DSP.resample(audio.data, sr / audio.samplerate),
-        sr
+function resample(audio::SampleBuf{T, 1}, samplerate::Real) where {T, F}
+    SampleBuf{T, 1}(
+        DSP.resample(audio.data, samplerate / audio.samplerate),
+        samplerate
     )
 end
 
@@ -81,14 +79,14 @@ function play(audio::SampleBuf{Float32})
         close(stream)
     end
 end
-play{T}(audio::SampleBuf{T}) = play(map(Float32, audio))
+play(audio::SampleBuf{T}) where T = play(map(Float32, audio))
 
 
 """"""
-function pitchshift{T, N}(audio::SampleBuf{T, N, Hertz}, semitones::Real)
+function pitchshift(audio::SampleBuf{T, N}, semitones::Real) where {T, N}
     rate = 2.0 ^ (semitones / 12.0)
     shifted = resample(slowdown(audio, rate), audio.samplerate / rate)
-    SampleBuf{T, N, Hertz}(
+    SampleBuf{T, N}(
         shifted.data,
         audio.samplerate
     )
@@ -107,7 +105,7 @@ function slowdown(audio::SampleBuf, ratio::Real, windowsize::Int = 1024, hopsize
 end
 
 """"""
-function zero_crossing_rate{T}(audio::SampleBuf{T, 1}, framesize::Int = 1024, hopsize::Int = framesize >> 2)
+function zero_crossing_rate(audio::SampleBuf{T, 1}, framesize::Int = 1024, hopsize::Int = framesize >> 2) where T
     nframes = MusicProcessing.nframes(length(audio.data), framesize, hopsize)
     result = Array(Float32, nframes)
 
@@ -117,5 +115,5 @@ function zero_crossing_rate{T}(audio::SampleBuf{T, 1}, framesize::Int = 1024, ho
         offset += hopsize
     end
 
-    SampleBuf{T, 1, SIUnits.SIQuantity{Float32,0,0,-1}}(result, audio.samplerate / Float32(hopsize))
+    SampleBuf{T, 1}(result, audio.samplerate / Float32(hopsize))
 end
