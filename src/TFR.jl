@@ -9,8 +9,7 @@ function spectrogram(audio::SampleBuf{T, 1},
                         hopsize::Int = windowsize >> 2;
                         window = hanning, kwargs...) where T
     noverlap = windowsize - hopsize
-    data = map(Float32, audio.data)
-    DSP.spectrogram(data, windowsize, noverlap; fs = audio.samplerate.val, window = window, kwargs...)
+    DSP.spectrogram(data, windowsize, noverlap; fs = audio.samplerate, window = window, kwargs...)
 end
 
 """"""
@@ -19,9 +18,8 @@ function spectrogram(audio::SampleBuf{T, 2},
                         hopsize::Int = windowsize >> 2;
                         window = hanning, kwargs...) where T
     noverlap = windowsize - hopsize
-    data = map(Float32, audio.data)
     (mapslices(data, 1) do data
-        DSP.spectrogram(data, windowsize, noverlap; fs = audio.samplerate.val, window = window, kwargs...)
+        DSP.spectrogram(data, windowsize, noverlap; fs = audio.samplerate, window = window, kwargs...)
     end)[:]
 end
 
@@ -42,8 +40,7 @@ function stft(audio::SampleBuf{T, 1},
                  hopsize::Int = windowsize >> 2;
                  window = hanning, kwargs...) where T
     noverlap = windowsize - hopsize
-    data = tofloat(audio.data)
-    DSP.stft(data, windowsize, noverlap; window = window, kwargs...)
+    DSP.stft(audio.data, windowsize, noverlap; window = window, kwargs...)
 end
 
 """"""
@@ -54,9 +51,8 @@ function stft(audio::SampleBuf{T, 2},
     noverlap = windowsize - hopsize
 
     stft = Array(Matrix, nchannels)
-    data = tofloat(audio.data)
     for i in 1:nchannels
-        stft[i] = DSP.stft(data[:, i], windowsize, noverlap; kwargs...)
+        stft[i] = DSP.stft(audio.data[:, i], windowsize, noverlap; kwargs...)
     end
     cat(3, stft...)
 end
