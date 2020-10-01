@@ -56,7 +56,7 @@ end
 function zero_crossings(array::AbstractVector{T}, size::Int = length(array), offset::Int = 0) where {T<:Real}
     result = 0
     previous = 0
-    for i in offset + (1:size)
+    for i in offset .+ (1:size)
         number = array[i]
         sgn = number == 0 ? 0 : number > 0 ? 1 : -1
         if sgn != previous
