@@ -12,6 +12,18 @@ Thanks to Julia's performance optimizations, it is significantly faster than lib
 
 All measurements are done by averaging over 100 repetitions, after one warmup run.
 
+# Installation
+
+Because [unregistered packages are not completely supported](https://github.com/JuliaLang/Pkg.jl/pull/1628) yet,
+PortAudio.jl should be pre-installed for correct installation.
+
+Run following commands:
+
+```julia
+pkg> add https://github.com/JuliaAudio/PortAudio.jl
+pkg> add https://github.com/JuliaMusic/MusicProcessing.jl
+```
+
 # Usage
 
 The following commands will display a graphic visualization and/or an HTML5 `<audio>` component for playing audio, when run in IJulia.

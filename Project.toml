@@ -1,0 +1,24 @@
+name = "MusicProcessing"
+uuid = "f57c4921-e30c-5f49-b073-3f2f2ada663e"
+repo = "https://github.com/JuliaMusic/MusicProcessing.jl.git"
+version = "1.8.1"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
+
+[deps]
+DSP = "717857b8-e6f2-59f4-9121-6e50c889abd2"
+FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
+FixedPointNumbers = "53c48c17-4a7d-5ca2-90c5-79b7896eea93"
+Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+PortAudio = "80ea8bcb-4634-5cb3-8ee8-a132660d1d2d"
+PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee"
+Requires = "ae029012-a4dd-5104-9daa-d747884805df"
+SampledSignals = "bd7594eb-a658-542f-9e75-4c4d8908c167"
+Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
