@@ -10,7 +10,7 @@ convert a multichannel audio to mono
 """
 function mono(audio::SampleBuf{T, 2}) where {T <: AbstractFloat}
     SampleBuf{T, 1}(
-        SampledSignals.mono(audio).data[:],
+        vec(SampledSignals.mono(audio).data),
         audio.samplerate
     )
 end
@@ -19,7 +19,7 @@ end
 function mono(audio::SampleBuf{T, 2}) where {T <: Fixed}
     nchannels = SampledSignals.nchannels(audio)
     if nchannels == 1
-        SampleBuf{T, 1}(audio.data[:], audio.samplerate)
+        SampleBuf{T, 1}(vec(audio.data), audio.samplerate)
     elseif nchannels == 2
         nsamples = SampledSignals.nframes(audio)
         buffer = Array{T}(undef, nsamples)
@@ -32,7 +32,7 @@ function mono(audio::SampleBuf{T, 2}) where {T <: Fixed}
         SampleBuf{T, 1}(buffer, audio.samplerate)
     else
         SampleBuf{T, 1}(
-            map(T, mean(map(Float32, audio.data))[:]),
+            map(T, vec(mean(map(Float32, audio.data)))),
             audio.samplerate
         )
     end

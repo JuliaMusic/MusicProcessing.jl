@@ -18,9 +18,9 @@ function spectrogram(audio::SampleBuf{T, 2},
                         hopsize::Int = windowsize >> 2;
                         window = hanning, kwargs...) where T
     noverlap = windowsize - hopsize
-    (mapslices(audio.data, dims=1) do data
+    vec(mapslices(audio.data, dims=1) do data
         DSP.spectrogram(data, windowsize, noverlap; fs = audio.samplerate, window = window, kwargs...)
-    end)[:]
+    end)
 end
 
 """"""
@@ -50,7 +50,7 @@ function stft(audio::SampleBuf{T, 2},
     nchannels = SampledSignals.nchannels(audio)
     noverlap = windowsize - hopsize
 
-    stft = Array{Matrix}(undef, nchannels)
+    stft = Array{Matrix{Complex{Float32}}}(undef, nchannels) # type that DSP.stft outputs
     for i in 1:nchannels
         stft[i] = DSP.stft(audio.data[:, i], windowsize, noverlap; kwargs...)
     end
@@ -106,7 +106,7 @@ function istft(stft::Array{Complex{T}, 2},
 
     columns = size(stft, 2)
     audio = zeros(T, windowsize + hopsize * (columns - 1))
-    weights = zeros(audio)
+    weights = zeros(T, windowsize + hopsize * (columns - 1))
     spectrum = zeros(T, nfft)
 
     nbins = size(stft, 1)
@@ -165,7 +165,7 @@ function istft(stft::Array{Complex{T}, 3},
                                    windowsize::Int = 2 * (size(stft, 1) - 1),
                                    hopsize::Int = windowsize >> 2; kwargs...) where {T <: AbstractFloat}
     nchannels = size(stft, 3)
-    buffers = Vector{Any}(undef, nchannels)
+    buffers = Vector{SampleBuf}(undef, nchannels)
 
     # run ISTFT for each channel
     for i = 1:nchannels
