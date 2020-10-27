@@ -10,7 +10,7 @@ convert a multichannel audio to mono
 """
 function mono(audio::SampleBuf{T, 2}) where {T <: AbstractFloat}
     SampleBuf{T, 1}(
-        mean(audio.data, 2)[:],
+        vec(SampledSignals.mono(audio).data),
         audio.samplerate
     )
 end
@@ -19,10 +19,10 @@ end
 function mono(audio::SampleBuf{T, 2}) where {T <: Fixed}
     nchannels = SampledSignals.nchannels(audio)
     if nchannels == 1
-        SampleBuf{T, 1}(audio.data[:], audio.samplerate)
+        SampleBuf{T, 1}(vec(audio.data), audio.samplerate)
     elseif nchannels == 2
         nsamples = SampledSignals.nframes(audio)
-        buffer = Array(T, nsamples)
+        buffer = Array{T}(undef, nsamples)
         for i = 1:nsamples
             @inbounds a = audio.data[i, 1].i
             @inbounds b = audio.data[i, 2].i
@@ -32,7 +32,7 @@ function mono(audio::SampleBuf{T, 2}) where {T <: Fixed}
         SampleBuf{T, 1}(buffer, audio.samplerate)
     else
         SampleBuf{T, 1}(
-            map(T, mean(map(Float32, audio.data))[:]),
+            map(T, vec(mean(map(Float32, audio.data)))),
             audio.samplerate
         )
     end
@@ -43,7 +43,7 @@ function resample(audio::SampleBuf{T, 2}, samplerate::Real) where T
     rate = samplerate / audio.samplerate
     filter = DSP.resample_filter(rate, 512, 1.0, 140)
     SampleBuf{T, 2}(
-        mapslices(audio.data, 1) do data
+        mapslices(audio.data, dims=1) do data
             DSP.resample(data, rate, filter)
         end,
         samplerate
@@ -60,7 +60,7 @@ end
 
 """returns the duration of given audio, in seconds"""
 function duration(audio::SampleBuf)
-    nframes(audio) / samplerate(audio)
+    SampledSignals.nframes(audio) / SampledSignals.samplerate(audio)
 end
 
 """
@@ -107,7 +107,7 @@ end
 """"""
 function zero_crossing_rate(audio::SampleBuf{T, 1}, framesize::Int = 1024, hopsize::Int = framesize >> 2) where T
     nframes = MusicProcessing.nframes(length(audio.data), framesize, hopsize)
-    result = Array(Float32, nframes)
+    result = Array{Float32}(undef,nframes)
 
     offset = 0
     for i = 1:nframes
@@ -115,5 +115,5 @@ function zero_crossing_rate(audio::SampleBuf{T, 1}, framesize::Int = 1024, hopsi
         offset += hopsize
     end
 
-    SampleBuf{T, 1}(result, audio.samplerate / Float32(hopsize))
+    result
 end

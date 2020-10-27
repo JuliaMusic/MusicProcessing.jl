@@ -9,8 +9,7 @@ function spectrogram(audio::SampleBuf{T, 1},
                         hopsize::Int = windowsize >> 2;
                         window = hanning, kwargs...) where T
     noverlap = windowsize - hopsize
-    data = map(Float32, audio.data)
-    DSP.spectrogram(data, windowsize, noverlap; fs = audio.samplerate.val, window = window, kwargs...)
+    DSP.spectrogram(audio.data, windowsize, noverlap; fs = audio.samplerate, window = window, kwargs...)
 end
 
 """"""
@@ -19,10 +18,9 @@ function spectrogram(audio::SampleBuf{T, 2},
                         hopsize::Int = windowsize >> 2;
                         window = hanning, kwargs...) where T
     noverlap = windowsize - hopsize
-    data = map(Float32, audio.data)
-    (mapslices(data, 1) do data
-        DSP.spectrogram(data, windowsize, noverlap; fs = audio.samplerate.val, window = window, kwargs...)
-    end)[:]
+    vec(mapslices(audio.data, dims=1) do data
+        DSP.spectrogram(data, windowsize, noverlap; fs = audio.samplerate, window = window, kwargs...)
+    end)
 end
 
 """"""
@@ -42,8 +40,7 @@ function stft(audio::SampleBuf{T, 1},
                  hopsize::Int = windowsize >> 2;
                  window = hanning, kwargs...) where T
     noverlap = windowsize - hopsize
-    data = tofloat(audio.data)
-    DSP.stft(data, windowsize, noverlap; window = window, kwargs...)
+    DSP.stft(audio.data, windowsize, noverlap; window = window, kwargs...)
 end
 
 """"""
@@ -53,12 +50,11 @@ function stft(audio::SampleBuf{T, 2},
     nchannels = SampledSignals.nchannels(audio)
     noverlap = windowsize - hopsize
 
-    stft = Array(Matrix, nchannels)
-    data = tofloat(audio.data)
+    stft = Array{Matrix{Complex{Float32}}}(undef, nchannels) # type that DSP.stft outputs
     for i in 1:nchannels
-        stft[i] = DSP.stft(data[:, i], windowsize, noverlap; kwargs...)
+        stft[i] = DSP.stft(audio.data[:, i], windowsize, noverlap; kwargs...)
     end
-    cat(3, stft...)
+    cat(stft..., dims=3)
 end
 
 """"""
@@ -110,7 +106,7 @@ function istft(stft::Array{Complex{T}, 2},
 
     columns = size(stft, 2)
     audio = zeros(T, windowsize + hopsize * (columns - 1))
-    weights = zeros(audio)
+    weights = zeros(T, windowsize + hopsize * (columns - 1))
     spectrum = zeros(T, nfft)
 
     nbins = size(stft, 1)
@@ -169,7 +165,7 @@ function istft(stft::Array{Complex{T}, 3},
                                    windowsize::Int = 2 * (size(stft, 1) - 1),
                                    hopsize::Int = windowsize >> 2; kwargs...) where {T <: AbstractFloat}
     nchannels = size(stft, 3)
-    buffers = cell(nchannels)
+    buffers = Vector{SampleBuf}(undef, nchannels)
 
     # run ISTFT for each channel
     for i = 1:nchannels
@@ -177,7 +173,7 @@ function istft(stft::Array{Complex{T}, 3},
     end
 
     nsamples = size(buffers[1], 1)
-    audio = Array(T, nsamples, nchannels)
+    audio = Array{T}(undef, nsamples, nchannels)
 
     for i = 1:nchannels
         audio[:, i] = buffers[i].data
@@ -216,13 +212,13 @@ function phase_vocoder(stft::Array{Complex{T}, 2},
     nfft = (nbins - 1) * 2
     timesteps = 1f0:speed:nframes
     stretched = zeros(Complex{T}, nbins, length(timesteps))
-    phase_advance = collect(linspace(0f0, T(π * hopsize), nbins))
-    phase_acc = angle(stft[:, 1])
-    cis_phase = Array(Complex{T}, size(phase_acc))
-    angle1 = Array(T, nbins)
-    angle2 = Array(T, nbins)
-    dphase = Array(T, nbins)
-    mag = Array(T, nbins)
+    phase_advance = collect(range(0f0, T(π * hopsize), length=nbins))
+    phase_acc = map(angle, stft[:,1])
+    cis_phase = Array{Complex{T}}(undef,size(phase_acc))
+    angle1 = Array{T}(undef, nbins)
+    angle2 = Array{T}(undef, nbins)
+    dphase = Array{T}(undef, nbins)
+    mag = Array{T}(undef, nbins)
     twopi = T(2π)
 
     @inbounds for (t, step) in enumerate(timesteps)
@@ -254,8 +250,8 @@ function phase_vocoder(stft::Array{Complex{T}, 2},
         end
 
         for i in 1:nbins
-            angle1[i] = angle(stft[i, left])
-            angle2[i] = angle(stft[i, right])
+            angle1[i] = map(angle, stft[i, left])
+            angle2[i] = map(angle,stft[i, right])
             # compute phase advance
             dphase[i] = angle2[i] - angle1[i] - phase_advance[i]
             # wrap to -pi:pi range
@@ -276,7 +272,7 @@ Phase vocoder. Given an STFT matrix, speed it up by a factor.
 function phase_vocoder(stft::Array{Complex{T}, 3},
                                            speed::Real,
                                            hopsize::Int = (size(stft, 1) - 1) >> 1) where {T <: AbstractFloat}
-    mapslices(stft, 1:2) do stft
+    mapslices(stft, dims=1:2) do stft
         phase_vocoder(stft, speed, hopsize)
     end
 end
