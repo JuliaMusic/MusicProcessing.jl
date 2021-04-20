@@ -1,5 +1,5 @@
 name = "MusicProcessing"
-uuid = "f57c4921-e30c-5f49-b073-3f2f2ada663e"
+uuid = "32bb9398-a9ad-408c-b137-8304ef5cbed9"
 repo = "https://github.com/JuliaMusic/MusicProcessing.jl.git"
 version = "1.8.1"
 
