@@ -13,6 +13,12 @@ SampledSignals = "bd7594eb-a658-542f-9e75-4c4d8908c167"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [compat]
+Unitful = "1.7"
+DSP = "0.6"
+FixedPointNumbers = "0.8"
+FFTW = "1.4"
+SampledSignals = "2.1"
+Requires = "1.1"
 julia = "1"
 
 [extras]
