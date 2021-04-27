@@ -7,14 +7,10 @@ using Requires
 using Unitful
 using IntervalSets
 using Statistics
-# using Unitful
 using Unitful: ns, ms, µs, s, Hz, kHz, MHz, GHz, THz
 using Compat
 using Compat: AbstractRange, undef, range
 using LinearAlgebra:mul!
-# using Random: randstring
-# using Base64: base64encode
-# using TreeViews: TreeViews
 
 # types used for fixed-point 16-bit and 32-bit encoding
 const PCM16Sample = Fixed{Int16, 15}
