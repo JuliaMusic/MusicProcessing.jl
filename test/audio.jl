@@ -24,22 +24,22 @@
         @test duration(audio_multi_channel) == 100
     end
 
-    @testset "pitchshift" begin
-        @test duration(pitchshift(audio_one_channel)) == duration(audio_one_channel)
-        @test duration(pitchshift(audio_two_channel)) == duration(audio_two_channel)
-        @test duration(pitchshift(audio_multi_channel)) == duration(audio_multi_channel)
-    end
+    # @testset "pitchshift" begin
+    #     @test duration(pitchshift(audio_one_channel)) == duration(audio_one_channel)
+    #     @test duration(pitchshift(audio_two_channel)) == duration(audio_two_channel)
+    #     @test duration(pitchshift(audio_multi_channel)) == duration(audio_multi_channel)
+    # end
 
-    @testset "speedup" begin
-        @test duration(speedup(audio_one_channel, 2)) == duration(audio_one_channel) // 2
-        @test duration(speedup(audio_two_channel, 2)) == duration(audio_two_channel) // 2
-        @test duration(speedup(audio_multi_channel, 2)) == duration(audio_multi_channel) // 2
-    end
+    # @testset "speedup" begin
+    #     @test duration(speedup(audio_one_channel, 2)) == duration(audio_one_channel) // 2
+    #     @test duration(speedup(audio_two_channel, 2)) == duration(audio_two_channel) // 2
+    #     @test duration(speedup(audio_multi_channel, 2)) == duration(audio_multi_channel) // 2
+    # end
 
-    @testset "slowdown" begin
-        @test duration(slowdown(audio_one_channel, 2)) == duration(audio_one_channel) * 2
-        @test duration(slowdown(audio_two_channel, 2)) == duration(audio_two_channel) * 2
-        @test duration(slowdown(audio_multi_channel, 2)) == duration(audio_multi_channel) * 2
-    end
+    # @testset "slowdown" begin
+    #     @test duration(slowdown(audio_one_channel, 2)) == duration(audio_one_channel) * 2
+    #     @test duration(slowdown(audio_two_channel, 2)) == duration(audio_two_channel) * 2
+    #     @test duration(slowdown(audio_multi_channel, 2)) == duration(audio_multi_channel) * 2
+    # end
 
 end
