@@ -76,7 +76,7 @@ domain(buf::AbstractSampleBuf) = range(0.0, stop=(nframes(buf)-1)/samplerate(buf
 import Base: +, -, *, /
 import Base.broadcast
 
-const ArrayIsh = Union{Array, SubArray, Compat.LinRange, StepRangeLen}
+const ArrayIsh = Union{Array, SubArray, LinRange, StepRangeLen}
 
 
 # Broadcasting in Julia 0.7
