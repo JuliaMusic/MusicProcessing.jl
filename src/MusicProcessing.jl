@@ -8,8 +8,6 @@ using Unitful
 using IntervalSets
 using Statistics
 using Unitful: ns, ms, µs, s, Hz, kHz, MHz, GHz, THz
-using Compat
-using Compat: AbstractRange, undef, range
 using LinearAlgebra:mul!
 
 # types used for fixed-point 16-bit and 32-bit encoding
