@@ -76,20 +76,12 @@ domain(buf::AbstractSampleBuf) = range(0.0, stop=(nframes(buf)-1)/samplerate(buf
 import Base: +, -, *, /
 import Base.broadcast
 
-const ArrayIsh = Union{Array, SubArray, LinRange, StepRangeLen}
+find_buf(args::Tuple) = find_buf(find_buf(args[1]), Base.tail(args))
+find_buf(x) = x
 
-
-# Broadcasting in Julia 0.7
-# `find_buf` has borrowed from https://docs.julialang.org/en/latest/manual/interfaces/#Selecting-an-appropriate-output-array-1
-if VERSION >= v"0.7.0-DEV-4936" # Julia PR 26891
-    find_buf(args::Tuple) = find_buf(find_buf(args[1]), Base.tail(args))
-    find_buf(x) = x
-end # if VERSION
 
 
 for btype in (:SampleBuf, :SpectrumBuf)
-
-    if VERSION >= v"0.7.0-DEV-4936" # Julia PR 26891
 
         @eval find_buf(bc::Base.Broadcast.Broadcasted{Broadcast.ArrayStyle{$btype{T,N}}}) where {T,N} = find_buf(bc.args)
         @eval find_buf(::$btype, args::Tuple{$btype}) = args[1]
@@ -101,59 +93,6 @@ for btype in (:SampleBuf, :SpectrumBuf)
             A = find_buf(bc)
             $btype(Array{ElType}(undef, length.(axes(bc))), samplerate(A))
         end
-
-    else
-
-        # define non-broadcasting arithmetic
-        for op in (:+, :-)
-            @eval function $op(A1::$btype, A2::$btype)
-                if !isapprox(samplerate(A1), samplerate(A2))
-                    error("samplerate-converting arithmetic not supported yet")
-                end
-                $btype($op(A1.data, A2.data), samplerate(A1))
-            end
-            @eval function $op(A1::$btype, A2::ArrayIsh)
-                $btype($op(A1.data, A2), samplerate(A1))
-            end
-            @eval function $op(A1::ArrayIsh, A2::$btype)
-                $btype($op(A1, A2.data), samplerate(A2))
-            end
-        end
-
-        # define non-broadcast scalar arithmetic
-        for op in (:+, :-, :*, :/)
-            @eval function $op(A1::$btype, a2::Number)
-                $btype($op(A1.data, a2), samplerate(A1))
-            end
-            @eval function $op(a1::Number, A2::$btype)
-                $btype($op(a1, A2.data), samplerate(A2))
-            end
-        end
-
-        # define broadcasting application
-        @eval function broadcast(op, A1::$btype, A2::$btype)
-            if !isapprox(samplerate(A1), samplerate(A2))
-                error("samplerate-converting arithmetic not supported yet")
-            end
-            $btype(broadcast(op, A1.data, A2.data), samplerate(A1))
-        end
-        @eval function broadcast(op, A1::$btype, A2::ArrayIsh)
-            $btype(broadcast(op, A1.data, A2), samplerate(A1))
-        end
-        @eval function broadcast(op, A1::ArrayIsh, A2::$btype)
-            $btype(broadcast(op, A1, A2.data), samplerate(A2))
-        end
-        @eval function broadcast(op, a1::Number, A2::$btype)
-            $btype(broadcast(op, a1, A2.data), samplerate(A2))
-        end
-        @eval function broadcast(op, A1::$btype, a2::Number)
-            $btype(broadcast(op, A1.data, a2), samplerate(A1))
-        end
-        @eval function broadcast(op, A1::$btype)
-            $btype(broadcast(op, A1.data), samplerate(A1))
-        end
-
-    end # if VERSION
 
 end # for btype
 
