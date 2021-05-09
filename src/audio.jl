@@ -10,18 +10,18 @@ convert a multichannel audio to mono
 """
 function mono(audio::SampleBuf{T, 2}) where {T <: AbstractFloat}
     SampleBuf{T, 1}(
-        vec(SampledSignals.mono(audio).data),
+        vec(monoch(audio).data),
         audio.samplerate
     )
 end
 
 # special code for fixed-point samples, to avoid overflow
 function mono(audio::SampleBuf{T, 2}) where {T <: Fixed}
-    nchannels = SampledSignals.nchannels(audio)
+    nchannels = nchannels(audio)
     if nchannels == 1
         SampleBuf{T, 1}(vec(audio.data), audio.samplerate)
     elseif nchannels == 2
-        nsamples = SampledSignals.nframes(audio)
+        nsamples = nframes(audio)
         buffer = Array{T}(undef, nsamples)
         for i = 1:nsamples
             @inbounds a = audio.data[i, 1].i
@@ -60,7 +60,7 @@ end
 
 """returns the duration of given audio, in seconds"""
 function duration(audio::SampleBuf)
-    SampledSignals.nframes(audio) / SampledSignals.samplerate(audio)
+    nframes(audio) / samplerate(audio)
 end
 
 """
@@ -71,7 +71,7 @@ play the audio on local computer using PortAudio
 function play(audio::SampleBuf{Float32})
     # import PortAudio on-demand
     @eval import PortAudio
-    nchannels = SampledSignals.nchannels(audio)
+    nchannels = nchannels(audio)
     stream = PortAudio.PortAudioStream(2, nchannels)
     try
         write(stream, audio)
@@ -83,7 +83,7 @@ play(audio::SampleBuf{T}) where T = play(map(Float32, audio))
 
 
 """"""
-function pitchshift(audio::SampleBuf{T, N}, semitones::Real) where {T, N}
+function pitchshift(audio::SampleBuf{T, N}, semitones::Real = 8) where {T, N}
     rate = 2.0 ^ (semitones / 12.0)
     shifted = resample(slowdown(audio, rate), audio.samplerate / rate)
     SampleBuf{T, N}(
