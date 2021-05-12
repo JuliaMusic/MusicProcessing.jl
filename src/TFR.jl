@@ -1,7 +1,6 @@
 
 import Base.eps
 import DSP.spectrogram, DSP.stft
-export spectrogram, stft, istft, phase_vocoder
 
 """"""
 function spectrogram(audio::SampleBuf{T, 1},
