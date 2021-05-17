@@ -32,6 +32,9 @@ include("constantq.jl")
 include("chroma.jl")
 
 export AbstractSampleBuf, SampleBuf, SpectrumBuf
+export mono, resample, duration, play, pitchshift, speedup, slowdown, zero_crossing_rate, nframes, nchannels
+export melspectrogram, mfcc
+export spectrogram, stft, istft, phase_vocoder
 
 function __init__()
     @require PyPlot="d330b81b-6aea-500a-939a-2ce795aea3ee" include("display.jl")

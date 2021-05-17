@@ -1,5 +1,4 @@
 import FFTW.Frequencies
-export melspectrogram, mfcc
 
 """The Mel spectrogram"""
 struct MelSpectrogram{T, F <: Union{Frequencies,AbstractRange}} <: DSP.Periodograms.TFR{T}
