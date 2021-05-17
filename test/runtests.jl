@@ -2,6 +2,7 @@ module MusicProcessingTest
 
 using MusicProcessing
 using Test
+using WAV
 
 tests = [
     "audio.jl",

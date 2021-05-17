@@ -27,31 +27,37 @@
         @test duration(audio_two_channel) == 100
         @test duration(audio_multi_channel) == 100
     end
-    audio_one_channel = SampleBuf(rand(10000), 10)
-    audio_two_channel = SampleBuf(rand(10000,2), 10)
-    audio_multi_channel = SampleBuf(rand(10000,2), 10)
+    audio_one_channel = SampleBuf(rand(10000), 1000)
+    audio_two_channel = SampleBuf(rand(10000,2), 1000)
+    audio_multi_channel = SampleBuf(rand(10000,2), 1000)
     # Tests for pitchshift method
     @testset "pitchshift" begin
-        @test isapprox(duration(pitchshift(audio_one_channel)), duration(audio_one_channel), atol=2)
-        @test isapprox(duration(pitchshift(audio_two_channel)), duration(audio_two_channel), atol=2)
-        @test isapprox(duration(pitchshift(audio_multi_channel)), duration(audio_multi_channel), atol=2)
+        @test isapprox(duration(pitchshift(audio_one_channel)), duration(audio_one_channel), atol=0.2)
+        @test isapprox(duration(pitchshift(audio_two_channel)), duration(audio_two_channel), atol=0.2)
+        @test isapprox(duration(pitchshift(audio_multi_channel)), duration(audio_multi_channel), atol=0.2)
     end
 
+    audio_one_channel = SampleBuf(rand(10000), 1000)
+    audio_two_channel = SampleBuf(rand(10000,2), 1000)
+    audio_multi_channel = SampleBuf(rand(10000,2), 1000)
     # Tests for speedup method
     @testset "speedup" begin
         
-        @test isapprox(duration(speedup(audio_one_channel, 2)), duration(audio_one_channel) / 2.0 , atol=40)
-        @test isapprox(duration(speedup(audio_two_channel, 2)), duration(audio_two_channel) / 2.0 , atol=40)
-        @test isapprox(duration(speedup(audio_multi_channel, 2)), duration(audio_multi_channel) / 2.0 , atol=40)
+        @test isapprox(duration(speedup(audio_one_channel, 2)), duration(audio_one_channel) / 2.0 , atol=0.4)
+        @test isapprox(duration(speedup(audio_two_channel, 2)), duration(audio_two_channel) / 2.0 , atol=0.4)
+        @test isapprox(duration(speedup(audio_multi_channel, 2)), duration(audio_multi_channel) / 2.0 , atol=0.4)
     end
 
+    audio_one_channel = SampleBuf(rand(10000), 1000)
+    audio_two_channel = SampleBuf(rand(10000,2), 1000)
+    audio_multi_channel = SampleBuf(rand(10000,2), 1000)
     # Tests for slowdown method
     @testset "slowdown" begin
 
-        @test isapprox(duration(slowdown(audio_one_channel, 2)), duration(audio_one_channel) * 2.0, atol=110)
-        @test isapprox(duration(slowdown(audio_two_channel, 2)), duration(audio_two_channel) * 2.0, atol=110)
-        @test isapprox(duration(slowdown(audio_multi_channel, 2)), duration(audio_multi_channel) * 2.0, atol=110)
-    end
+        @test isapprox(duration(slowdown(audio_one_channel, 2)), duration(audio_one_channel) * 2.0, atol=1.2)
+        @test isapprox(duration(slowdown(audio_two_channel, 2)), duration(audio_two_channel) * 2.0, atol=1.2)
+        @test isapprox(duration(slowdown(audio_multi_channel, 2)), duration(audio_multi_channel) * 2.0, atol=1.2)
+   end
 
     # Tests for zero crossing rate method
     @testset "zero_crossing_rate" begin
@@ -61,4 +67,11 @@
         res = 192
         @test expected == res
     end
+
+    y, fs = wavread("test-audio/317744__xserra__speech-male.wav")
+    wavwrite(y, "test-result/test.wav", Fs=fs)
+    wavwrite(pitchshift(SampleBuf{Float64, 2}(y,fs)).data, "test-result/pitchshifted.wav", Fs=fs)
+    wavwrite(speedup(SampleBuf{Float64, 2}(y,fs), 2).data, "test-result/speedup.wav", Fs=fs)
+    wavwrite(slowdown(SampleBuf{Float64, 2}(y,fs), 2).data, "test-result/slowdown.wav", Fs=fs)
+
 end
