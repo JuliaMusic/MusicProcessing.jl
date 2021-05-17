@@ -46,7 +46,7 @@ end
 function stft(audio::SampleBuf{T, 2},
                  windowsize::Int = 1024,
                  hopsize::Int = windowsize >> 2; kwargs...) where T
-    nchannels = nchannels(audio)
+    nchannels = size(audio.data, 2)
     noverlap = windowsize - hopsize
 
     stft = Array{Matrix{Complex{Float32}}}(undef, nchannels) # type that DSP.stft outputs

@@ -205,7 +205,7 @@ pitchshift(audio_multi_channel, 8)
 ```
 
 """
-function pitchshift(audio::SampleBuf{T, N}, semitones::Real = 8) where {T, N}
+function pitchshift(audio::SampleBuf{T, N}, semitones::Real = 0) where {T, N}
     rate = 2.0 ^ (semitones / 12.0)
     shifted = resample(slowdown(audio, rate), audio.samplerate / rate)
     SampleBuf{T, N}(
