@@ -68,10 +68,4 @@
         @test expected == res
     end
 
-    # y, fs = wavread("test-audio/317744__xserra__speech-male.wav")
-    # wavwrite(y, "test-result/test.wav", Fs=fs)
-    # wavwrite(pitchshift(SampleBuf{Float64, 2}(y,fs)).data, "test-result/pitchshifted.wav", Fs=fs)
-    # wavwrite(speedup(SampleBuf{Float64, 2}(y,fs), 2).data, "test-result/speedup.wav", Fs=fs)
-    # wavwrite(slowdown(SampleBuf{Float64, 2}(y,fs), 2).data, "test-result/slowdown.wav", Fs=fs)
-
 end
