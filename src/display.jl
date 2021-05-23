@@ -1,3 +1,36 @@
+export waveplot, specplot, test
+
+"""
+    test()
+"""
+
+function test()
+    x = collect(1:10)
+    y = collect(1:10)
+    Plots.plot(x,y)
+end
+
+"""
+    specplot(audio::Sample{T,N}, fs = 44100Hz)
+
+
+"""
+function specplot(audio::SampleBuf{T,N}, fs = 44100Hz) where {T,N}
+    n = length(audio.data)
+    nw = n÷50
+    spec = spectrogram(mono(audio).data, nw, nw÷2; fs=fs)
+    Plots.heatmap(spec.time, spec.freq, pow2db.(spec.power), xguide="Time [s]", yguide="Frequency [Hz]")
+end
+"""
+    waveplot(audio::Sample{T,N}, fs = 44100Hz)
+
+
+"""
+
+function waveplot(audio::SampleBuf{T,N}, fs = 44100Hz) where {T,N}
+    Plots.plot(0:1/fs:(length(mono(audio))-1)/fs, mono(audio))
+end
+
 
 # methods to translate
 
@@ -64,3 +97,4 @@ function Base.show(io::IO, mime::MIME"image/png", tfrs::Array{R, 1}) where {R <:
     end
     show(io, mime, PyPlot.gcf())
 end
+
