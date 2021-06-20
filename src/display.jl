@@ -16,6 +16,13 @@ end
 
 Draws spectrogram of an audio
 
+# Example
+
+```julia
+using GLMakie
+audio_one_channel = SampleBuf(rand(1000), 10)
+specplot(audio_one_channel,22100)
+```
 """
 function specplot(audio::SampleBuf{T,N}, fs = 44100) where {T,N}
     n = length(audio.data)
@@ -28,8 +35,14 @@ end
 
 Draws waveplot of a audio
 
-"""
+# Example
 
+```julia
+using GLMakie
+audio_one_channel = SampleBuf(rand(1000), 10)
+waveplot(audio_one_channel,48000)
+```
+"""
 function waveplot(audio::SampleBuf{T,N}, fs = 44100) where {T,N}
     lines(0:1/fs:(length(mono(audio))-1)/fs, mono(audio))
 end
