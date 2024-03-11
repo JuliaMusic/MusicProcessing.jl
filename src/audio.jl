@@ -109,7 +109,7 @@ end
 Resamples input audio with a provided sample rate
 
 """
-function resample(audio::SampleBuf{T, 1}, samplerate::Real) where {T, F}
+function resample(audio::SampleBuf{T, 1}, samplerate::Real) where {T}
     SampleBuf{T, 1}(
         DSP.resample(audio.data, samplerate / audio.samplerate),
         samplerate
