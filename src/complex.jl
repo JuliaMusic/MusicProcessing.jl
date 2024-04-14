@@ -16,19 +16,19 @@ end
 const ArrayLike{T} = Union{Vector{T}, Ptr{T}}
 
 function plan_dft_c2r_1d!(dest::ArrayLike{Float32}, src::ArrayLike{Complex{Float32}}, nfft::Int)
-    ccall((:fftwf_plan_dft_c2r_1d, libfftw3f), FFTW.PlanPtr, (Cint, Ptr{Complex{Float32}}, Ptr{Float32}, Cuint), nfft, src, dest, 0)
+    ccall((:fftwf_plan_dft_c2r_1d, libfftw3f.x), FFTW.PlanPtr, (Cint, Ptr{Complex{Float32}}, Ptr{Float32}, Cuint), nfft, src, dest, 0)
 end
 
 function plan_dft_c2r_1d!(dest::ArrayLike{Float64}, src::ArrayLike{Complex{Float64}}, nfft::Int)
-    ccall((:fftw_plan_dft_c2r_1d, libfftw3), FFTW.PlanPtr, (Cint, Ptr{Complex{Float64}}, Ptr{Float64}, Cuint), nfft, src, dest, 0)
+    ccall((:fftw_plan_dft_c2r_1d, libfftw3.x), FFTW.PlanPtr, (Cint, Ptr{Complex{Float64}}, Ptr{Float64}, Cuint), nfft, src, dest, 0)
 end
 
 function execute_dft_c2r!(dest::ArrayLike{Float32}, src::ArrayLike{Complex{Float32}}, plan::FFTW.PlanPtr)
-    ccall((:fftwf_execute_dft_c2r, libfftw3f), Nothing, (FFTW.PlanPtr, Ptr{Complex{Float32}}, Ptr{Float32}), plan, src, dest)
+    ccall((:fftwf_execute_dft_c2r, libfftw3f.x), Nothing, (FFTW.PlanPtr, Ptr{Complex{Float32}}, Ptr{Float32}), plan, src, dest)
 end
 
 function execute_dft_c2r!(dest::ArrayLike{Float64}, src::ArrayLike{Complex{Float64}}, plan::FFTW.PlanPtr)
-    ccall((:fftw_execute_dft_c2r, libfftw3), Nothing, (FFTW.PlanPtr, Ptr{Complex{Float64}}, Ptr{Float64}), plan, src, dest)
+    ccall((:fftw_execute_dft_c2r, libfftw3.x), Nothing, (FFTW.PlanPtr, Ptr{Complex{Float64}}, Ptr{Float64}), plan, src, dest)
 end
 
 """Performs inverse real-data FFT without allocating the result array"""
