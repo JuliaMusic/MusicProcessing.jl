@@ -141,7 +141,7 @@ function istft(stft::Array{Complex{T}, 2},
     istft(stft,
             ustrip(samplerate),
             windowsize,
-            hopsize,
+            hopsize;
             nfft,
             window)
 end
