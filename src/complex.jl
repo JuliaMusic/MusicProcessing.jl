@@ -2,13 +2,13 @@
 import FFTW.libfftw3, FFTW.libfftw3f
 
 function cis!(dest::AbstractVector{Complex{T}}, v::AbstractVector{T}) where {T<:Number}
-    @inbounds for i in 1:length(v)
+    @inbounds for i in eachindex(v)
         dest[i] = cis(v[i])
     end
 end
 
 function multiply!(dest::AbstractVector{Complex{T}}, left::AbstractVector{Complex{T}}, right::AbstractVector{T}) where {T<:Number}
-    @inbounds for i in 1:length(dest)
+    @inbounds for i in eachindex(dest)
         dest[i] = left[i] * right[i]
     end
 end

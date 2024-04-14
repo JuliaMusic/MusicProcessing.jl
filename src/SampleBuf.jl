@@ -121,7 +121,7 @@ function showchannels(io::IO, buf::AbstractSampleBuf, widthchars=80)
     blockwidth = round(Int, nframes(buf)/widthchars, RoundUp)
     nblocks = round(Int, nframes(buf)/blockwidth, RoundUp)
     blocks = Array{Char}(undef, nblocks, nchannels(buf))
-    for blk in 1:nblocks
+    for blk = 1:nblocks
         i = (blk-1)*blockwidth + 1
         n = min(blockwidth, nframes(buf)-i+1)
         peaks = Compat.maximum(abs.(float.(buf[(1:n) .+ i .- 1, :])), dims=1)
@@ -130,7 +130,7 @@ function showchannels(io::IO, buf::AbstractSampleBuf, widthchars=80)
         idxs = trunc.(Int, (peaks.+60)/60 * (length(ticks)-1)) .+ 1
         blocks[blk, :] = ticks[idxs]
     end
-    for ch in 1:nchannels(buf)
+    for ch = 1:nchannels(buf)
         println(io)
         print(io, String(blocks[:, ch]))
     end
@@ -273,7 +273,7 @@ for buftype in (:SampleBuf, :SpectrumBuf)
             error("Broadcasting convolution not yet supported")
         end
         out = $buftype(T, samplerate(b1), nframes(b1)+nframes(b2)-1, nchannels(b1))
-        for ch in 1:nchannels(b1)
+        for ch = 1:nchannels(b1)
             out[:, ch] = conv(b1.data[:, ch], b2.data[:, ch])
         end
 
@@ -291,7 +291,7 @@ for buftype in (:SampleBuf, :SpectrumBuf)
             error("Broadcasting convolution not yet supported")
         end
         out = $buftype(T, samplerate(b1), nframes(b1)+nframes(b2)-1, nchannels(b1))
-        for ch in 1:nchannels(b1)
+        for ch = 1:nchannels(b1)
             out[:, ch] = conv(b1.data[:, ch], b2[:, ch])
         end
 

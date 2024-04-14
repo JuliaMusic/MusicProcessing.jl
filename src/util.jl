@@ -42,7 +42,7 @@ end
 
 """returns the DCT filters"""
 function dct(nfilters::Int, ninput::Int)
-    basis = Array(Float32, nfilters, ninput)
+    basis = zeros(Float32, nfilters, ninput)
     samples = (1f0:2f0:2ninput) * π / 2ninput
     for i = 1:nfilters
         basis[i, :] = cos(i * samples)
@@ -56,7 +56,7 @@ end
 function zero_crossings(array::AbstractVector{T}, size::Int = length(array), offset::Int = 0) where {T<:Real}
     result = 0
     previous = 0
-    for i in offset .+ (1:size)
+    for i in (1:size) .+ offset
         number = array[i]
         sgn = number == 0 ? 0 : number > 0 ? 1 : -1
         if sgn != previous

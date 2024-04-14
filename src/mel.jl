@@ -31,7 +31,7 @@ function hz_to_mel(frequencies::Union{F, AbstractArray{F}}) where {F <: Real}
     min_log_mel = (min_log_hz - f_min) / f_sp
     logstep = log(6.4f0) / 27f0
 
-    @inbounds for i = 1:length(mels)
+    @inbounds for i = eachindex(mels)
         if frequencies[i] >= min_log_hz
             mels[i] = min_log_mel + log(frequencies[i] / min_log_hz) / logstep
         end
@@ -50,7 +50,7 @@ function mel_to_hz(mels::Union{F, AbstractArray{F}}) where {F <: Real}
     min_log_mel = (min_log_hz - f_min) / f_sp
     logstep = log(6.4f0) / 27f0
 
-    @inbounds for i = 1:length(frequencies)
+    @inbounds for i = eachindex(frequencies)
         if mels[i] >= min_log_mel
             frequencies[i] = min_log_hz * exp(logstep * (mels[i] - min_log_mel))
         end
@@ -75,7 +75,7 @@ function mel(samplerate::Real, nfft::Int, nmels::Int = 128, fmin::Real = 0f0, fm
     melfreqs = mel_frequencies(nmels + 2, fmin, fmax)
     enorm = 2f0 ./ (melfreqs[3:end] - melfreqs[1:nmels])
 
-    for i in 1:nmels
+    for i = 1:nmels
         lower = (fftfreqs - melfreqs[i]) / (melfreqs[i+1] - melfreqs[i])
         upper = (melfreqs[i+2] - fftfreqs) / (melfreqs[i+2] - melfreqs[i+1])
 
@@ -104,7 +104,7 @@ function mfcc(audio::SampleBuf{T, 1}, windowsize::Int = 1024, hopsize::Int = win
     M = melspectrogram(audio, windowsize, hopsize; nmels = nmels, fmin = fmin, fmax = fmax)
     mfcc = dct(nmfcc, nmels) * power(M)
 
-    for frame in 1:size(mfcc, 2)
+    for frame in axes(mfcc, 2)
         mfcc[:, frame] /= norm(mfcc[:, frame])
     end
 

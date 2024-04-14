@@ -50,7 +50,7 @@ function stft(audio::SampleBuf{T, 2},
     noverlap = windowsize - hopsize
 
     stft = Array{Matrix{Complex{Float32}}}(undef, nchannels) # type that DSP.stft outputs
-    for i in 1:nchannels
+    for i = 1:nchannels
         stft[i] = DSP.stft(audio.data[:, i], windowsize, noverlap; kwargs...)
     end
     cat(stft..., dims=3)
@@ -112,17 +112,17 @@ function istft(stft::Array{Complex{T}, 2},
     base = Base.unsafe_convert(Ptr{Complex{T}}, stft)
     stride = nbins * sizeof(Complex{T})
 
-    @inbounds for i in 1:columns
+    @inbounds for i = 1:columns
         irfft!(spectrum, base + stride * (i-1), nfft)
 
         left = (i-1) * hopsize
-        for j in 1:windowsize
+        for j = 1:windowsize
             audio[left + j] += window[j] * spectrum[j]
             weights[left + j] += window[j]
         end
     end
 
-    @inbounds for i in 1:length(audio)
+    @inbounds for i in eachindex(audio)
         if weights[i] > eps(T)
             audio[i] /= weights[i]
         end
@@ -239,7 +239,7 @@ function phase_vocoder(stft::Array{Complex{T}, 2},
         # store to output array
         cis!(cis_phase, phase_acc)
         multiply!(cis_phase, cis_phase, mag)
-        for i in 1:nbins
+        for i = 1:nbins
             stretched[i, t] = cis_phase[i]
         end
 
@@ -248,7 +248,7 @@ function phase_vocoder(stft::Array{Complex{T}, 2},
             break
         end
 
-        for i in 1:nbins
+        for i = 1:nbins
             angle1[i] = map(angle, stft[i, left])
             angle2[i] = map(angle,stft[i, right])
             # compute phase advance
