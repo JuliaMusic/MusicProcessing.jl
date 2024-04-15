@@ -339,7 +339,7 @@ zero_crossing_rate(audio_one_channel, 2048, 512)
 
 """
 function zero_crossing_rate(audio::SampleBuf{T, 1}, framesize::Int = 1024, hopsize::Int = framesize >> 2) where T
-    nframe = nframes(length(audio.data), framesize, hopsize)
+    nframe = nframes_hops(length(audio.data), framesize, hopsize)
     result = Array{Float32}(undef,nframe)
 
     offset = 0
