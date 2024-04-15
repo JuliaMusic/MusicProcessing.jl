@@ -91,8 +91,8 @@ function melspectrogram(audio::SampleBuf{T, 1}, windowsize::Int = 1024, hopsize:
     nfft = DSP.nextfastfft(windowsize)
     S = spectrogram(audio, windowsize, hopsize).power
     data = mel(samplerate, nfft, nmels, fmin, fmax) * S
-    nframes = size(data, 2)
-    MelSpectrogram(data, linspace(hz_to_mel(fmin)[1], hz_to_mel(fmax)[1], nmels), (0.0:nframes-1) * hopsize / samplerate)
+    nframe = size(data, 2)
+    MelSpectrogram(data, linspace(hz_to_mel(fmin)[1], hz_to_mel(fmax)[1], nmels), (0.0:nframe-1) * hopsize / samplerate)
 end
 
 function mfcc(audio::SampleBuf{T, 1}, windowsize::Int = 1024, hopsize::Int = windowsize >> 2;

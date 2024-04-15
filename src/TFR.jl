@@ -46,11 +46,11 @@ end
 function stft(audio::SampleBuf{T, 2},
                  windowsize::Int = 1024,
                  hopsize::Int = windowsize >> 2; kwargs...) where T
-    nchannels = size(audio.data, 2)
+    nchannel = size(audio.data, 2)
     noverlap = windowsize - hopsize
 
-    stft = Array{Matrix{Complex{Float32}}}(undef, nchannels) # type that DSP.stft outputs
-    for i = 1:nchannels
+    stft = Array{Matrix{Complex{Float32}}}(undef, nchannel) # type that DSP.stft outputs
+    for i = 1:nchannel
         stft[i] = DSP.stft(audio.data[:, i], windowsize, noverlap; kwargs...)
     end
     cat(stft..., dims=3)
@@ -163,18 +163,18 @@ function istft(stft::Array{Complex{T}, 3},
                                    samplerate::Real,
                                    windowsize::Int = 2 * (size(stft, 1) - 1),
                                    hopsize::Int = windowsize >> 2; kwargs...) where {T <: AbstractFloat}
-    nchannels = size(stft, 3)
-    buffers = Vector{SampleBuf}(undef, nchannels)
+    nchannel = size(stft, 3)
+    buffers  = Vector{SampleBuf}(undef, nchannel)
 
     # run ISTFT for each channel
-    for i = 1:nchannels
+    for i = 1:nchannel
         buffers[i] = istft(stft[:, :, i], samplerate, windowsize, hopsize; kwargs...)
     end
 
     nsamples = size(buffers[1], 1)
-    audio = Array{T}(undef, nsamples, nchannels)
+    audio = Array{T}(undef, nsamples, nchannel)
 
-    for i = 1:nchannels
+    for i = 1:nchannel
         audio[:, i] = buffers[i].data
     end
 
@@ -207,9 +207,9 @@ function phase_vocoder(stft::Array{Complex{T}, 2},
                                            hopsize::Int = (size(stft, 1) - 1) >> 1) where {T <: AbstractFloat}
 
     nbins = size(stft, 1)
-    nframes = size(stft, 2)
+    nframe = size(stft, 2)
     nfft = (nbins - 1) * 2
-    timesteps = 1f0:speed:nframes
+    timesteps = 1f0:speed:nframe
     stretched = zeros(Complex{T}, nbins, length(timesteps))
     phase_advance = collect(range(0f0, T(π * hopsize), length=nbins))
     phase_acc = map(angle, stft[:,1])
@@ -226,7 +226,7 @@ function phase_vocoder(stft::Array{Complex{T}, 2},
 
         # weighting for linear magnitude interpolation
         alpha = step % 1f0
-        if left < nframes
+        if left < nframe
             for i = 1:nbins
                 mag[i] = (1f0 - alpha) * abs(stft[i, left]) + alpha * abs(stft[i, right])
             end

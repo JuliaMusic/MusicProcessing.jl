@@ -2,13 +2,12 @@
 
 import DSP.resample, DSP.arraysplit
 
-
 """
     mono(audio::SampleBuf{T, N})
 
 Converts a multichannel audio to single channel
 
-# Output 
+# Output
 
 Return the mono channel audio as a SampleBuf{T, 1} with initial sample rate.
 
@@ -35,17 +34,17 @@ mono(audio_multi_channel)
 """
 function mono(audio::SampleBuf{T, N}) where {T <: AbstractFloat, N}
     SampleBuf{T, 1}(
-        vec(monoch(audio).data),
+        vec(mono(audio.data)),
         audio.samplerate
     )
 end
 
 # special code for fixed-point samples, to avoid overflow
 function mono(audio::SampleBuf{T, 2}) where {T <: Fixed}
-    nchannels = nchannels(audio)
-    if nchannels == 1
+    nchannel = nchannels(audio)
+    if nchannel == 1
         SampleBuf{T, 1}(vec(audio.data), audio.samplerate)
-    elseif nchannels == 2
+    elseif nchannel == 2
         nsamples = nframes(audio)
         buffer = Array{T}(undef, nsamples)
         for i = 1:nsamples
@@ -64,11 +63,11 @@ function mono(audio::SampleBuf{T, 2}) where {T <: Fixed}
 end
 
 """
-    resample(audio::SampleBuf{T, 2}, samplerate::Real) 
+    resample(audio::SampleBuf{T, 2}, samplerate::Real)
 
 Resamples input audio with a provided sample rate
 
-# Output 
+# Output
 
 Return the resampled audio as a SampleBuf{T, 2} with given sample rate.
 
@@ -104,7 +103,7 @@ function resample(audio::SampleBuf{T, 2}, samplerate::Real) where T
 end
 
 """
-    resample(audio::SampleBuf{T, 2}, samplerate::Real) 
+    resample(audio::SampleBuf{T, 2}, samplerate::Real)
 
 Resamples input audio with a provided sample rate
 
@@ -121,7 +120,7 @@ end
 
 Returns the duration of given audio, in seconds
 
-# Output 
+# Output
 
 Return the duration of audio(in seconds).
 
@@ -158,14 +157,15 @@ play the audio on local computer using PortAudio
 function play(audio::SampleBuf{Float32})
     # import PortAudio on-demand
     @eval import PortAudio
-    nchannels = nchannels(audio)
-    stream = PortAudio.PortAudioStream(2, nchannels)
+    nchannel = nchannels(audio)
+    stream   = PortAudio.PortAudioStream(2, nchannel)
     try
         write(stream, audio)
     finally
         close(stream)
     end
 end
+
 play(audio::SampleBuf{T}) where T = play(map(Float32, audio))
 
 
@@ -174,7 +174,7 @@ play(audio::SampleBuf{T}) where T = play(map(Float32, audio))
 
 Returns pitchshifted audio waveform
 
-# Output 
+# Output
 
 Return the pitchshifted audio waveform as a SampleBuf{T, N}.
 
@@ -219,7 +219,7 @@ end
 
 Returns a speedup audio waveform using various parameters
 
-# Output 
+# Output
 
 Return the speedup audio waveform as a SampleBuf{T, N} using windowsize and hopsize.
 
@@ -236,7 +236,7 @@ A parameter used to define the window size for stft and istft functions.
 
 ## `hopsize`
 
-A parameter used to define the number audio of frames between stft columns. 
+A parameter used to define the number audio of frames between stft columns.
 
 # Example
 
@@ -265,7 +265,7 @@ end
 
 Returns a slowdowned audio using various parameters
 
-# Output 
+# Output
 
 Return the slowdowned audio waveform as a SampleBuf{T, N} using windowsize and hopsize.
 
@@ -282,7 +282,7 @@ A parameter used to define the window size for stft and istft functions.
 
 ## `hopsize`
 
-A parameter used to define the number audio of frames between stft columns. 
+A parameter used to define the number audio of frames between stft columns.
 
 # Example
 
@@ -305,11 +305,11 @@ function slowdown(audio::SampleBuf, ratio::Real, windowsize::Int = 1024, hopsize
 end
 
 """
-    zero_crossing_rate(audio::SampleBuf{T, 1}, framesize::Int = 1024, hopsize::Int = framesize >> 2) 
+    zero_crossing_rate(audio::SampleBuf{T, 1}, framesize::Int = 1024, hopsize::Int = framesize >> 2)
 
 Returns zero crossing rate in a audio waveform
 
-# Output 
+# Output
 
 Returns a array of zero-crossings in y along the selected axis of audio using various parameters
 
@@ -325,7 +325,7 @@ A parameter used to define the framesize to calculate no of zero crossings.
 
 ## `hopsize`
 
-A parameter used to define the number audio of frames between frames size columns. 
+A parameter used to define the number audio of frames between frames size columns.
 
 # Example
 
@@ -339,11 +339,11 @@ zero_crossing_rate(audio_one_channel, 2048, 512)
 
 """
 function zero_crossing_rate(audio::SampleBuf{T, 1}, framesize::Int = 1024, hopsize::Int = framesize >> 2) where T
-    nframes = MusicProcessing.nframes(length(audio.data), framesize, hopsize)
-    result = Array{Float32}(undef,nframes)
+    nframe = nframes(length(audio.data), framesize, hopsize)
+    result = Array{Float32}(undef,nframe)
 
     offset = 0
-    for i = 1:nframes
+    for i = 1:nframe
         result[i] = zero_crossings(audio.data, framesize, offset) / framesize
         offset += hopsize
     end
