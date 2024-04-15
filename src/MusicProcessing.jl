@@ -10,6 +10,7 @@ using Statistics
 using Unitful
 using Unitful: ns, ms, µs, s, Hz, kHz, MHz, GHz, THz
 using LinearAlgebra: mul!
+using PortAudio: PortAudioStream, get_default_output_index, get_device
 import SampledSignals: mono, nchannels, nframes
 
 # types used for fixed-point 16-bit and 32-bit encoding
