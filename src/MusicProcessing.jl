@@ -13,6 +13,11 @@ using LinearAlgebra: mul!
 using PortAudio: PortAudioStream, get_default_output_index, get_device
 import SampledSignals: mono, nchannels, nframes
 
+if Sys.islinux()
+    using alsa_plugins_jll
+    ENV["ALSA_PLUGIN_DIR"] = joinpath(alsa_plugins_jll.artifact_dir, "lib", "alsa-lib")
+end
+
 # types used for fixed-point 16-bit and 32-bit encoding
 const PCM16Sample = Fixed{Int16, 15}
 const PCM32Sample = Fixed{Int32, 31}

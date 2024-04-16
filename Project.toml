@@ -17,6 +17,7 @@ SampledSignals = "bd7594eb-a658-542f-9e75-4c4d8908c167"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 TestItemRunner = "f8b46487-2199-4994-9208-9a1283c18c0a"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
+alsa_plugins_jll = "5ac2f6bb-493e-5871-9171-112d4c21a6e7"
 
 [compat]
 DSP = "0.6.10, 0.7"
@@ -33,6 +34,7 @@ Statistics = "1"
 Test = "1"
 TestItemRunner = "0.2"
 Unitful = "1.7"
+alsa_plugins_jll = "1"
 julia = "1.6"
 
 [extras]
