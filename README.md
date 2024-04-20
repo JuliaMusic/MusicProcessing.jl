@@ -19,14 +19,14 @@ The following commands will display a graphic visualization and/or an HTML5 `<au
 ### Loading an audio file
 
 ```julia
-julia> using MusicProcessing, MP3
+julia> using MusicProcessing, FileIO, MP3
 julia> audio = load("Sour_Tennessee_Red_Sting.mp3")
 ```
 
 ### Converting to a mono audio
 
 ```julia
-julia> audio = mono(a)
+julia> audio = mono(audio)
 ```
 
 ### Resampling in 22050 Hz
