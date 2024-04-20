@@ -155,6 +155,7 @@ end
 play the audio on local computer using PortAudio
 """
 function play(audio::SampleBuf{Float32})
+    @eval import PortAudio: PortAudioStream, get_default_output_index, get_device
     nchannel = nchannels(audio)
     device   = get_device(get_default_output_index())
     input_channels  = device.input_bounds.max_channels
