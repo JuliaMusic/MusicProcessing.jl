@@ -3,7 +3,7 @@
 tofloat(array::AbstractArray{T}) where T = map(Float32, array)
 tofloat(array::AbstractArray{Float32}) = array
 
-fft_frequencies(samplerate::Real, nfft::Int) = collect(linspace(0f0, samplerate / 2f0, (nfft >> 1) + 1))
+fft_frequencies(samplerate::Real, nfft::Int) = collect(LinRange(0f0, samplerate / 2f0, (nfft >> 1) + 1))
 
 
 """returns the number of frames when the signal is partitioned into overlapping frames"""
@@ -45,7 +45,7 @@ function dct(nfilters::Int, ninput::Int)
     basis = zeros(Float32, nfilters, ninput)
     samples = (1f0:2f0:2ninput) * π / 2ninput
     for i = 1:nfilters
-        basis[i, :] = cos(i * samples)
+        basis[i, :] = cos.(i * samples)
     end
 
     basis *= sqrt(2f0/ninput)

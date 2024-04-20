@@ -102,6 +102,10 @@ function resample(audio::SampleBuf{T, 2}, samplerate::Real) where T
     )
 end
 
+function resample(audio::SampleBuf{T, 2}, samplerate::Unitful.Frequency) where T
+    resample(audio, ustrip(uconvert(Hz, samplerate)))
+end
+
 """
     resample(audio::SampleBuf{T, 2}, samplerate::Real)
 
@@ -113,6 +117,10 @@ function resample(audio::SampleBuf{T, 1}, samplerate::Real) where {T}
         DSP.resample(audio.data, samplerate / audio.samplerate),
         samplerate
     )
+end
+
+function resample(audio::SampleBuf{T, 1}, samplerate::Unitful.Frequency) where {T}
+    resample(audio, ustrip(uconvert(Hz, samplerate)))
 end
 
 """

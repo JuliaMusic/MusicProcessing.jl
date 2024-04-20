@@ -24,11 +24,11 @@ end
 
 """"""
 function spectrogram(audio::SampleBuf{T, N},
-                           windowsize::Seconds,
-                           hopsize::Seconds = windowsize / 4;
+                           windowsize::Unitful.Time,
+                           hopsize::Unitful.Time = windowsize / 4;
                            kwargs...) where {T, N}
-    w = round(Int, ustrip(windowsize) * audio.samplerate)
-    h = round(Int, ustrip(hopsize) * audio.samplerate)
+    w = round(Int, ustrip(uconvert(s, windowsize)) * audio.samplerate)
+    h = round(Int, ustrip(uconvert(s, hopsize   )) * audio.samplerate)
     spectrogram(audio, w, h; kwargs...)
 end
 
@@ -58,10 +58,10 @@ end
 
 """"""
 function stft(audio::SampleBuf{T, N},
-                    windowsize::Seconds,
-                    hopsize::Seconds = windowsize / 4; kwargs...) where {T, N}
-    w = round(Int, ustrip(windowsize) * audio.samplerate)
-    h = round(Int, ustrip(hopsize) * audio.samplerate)
+                    windowsize::Unitful.Time,
+                    hopsize::Unitful.Time = windowsize / 4; kwargs...) where {T, N}
+    w = round(Int, ustrip(uconvert(s, windowsize)) * audio.samplerate)
+    h = round(Int, ustrip(uconvert(s, hopsize   )) * audio.samplerate)
     stft(audio, w, h; kwargs...)
 end
 
@@ -133,13 +133,13 @@ end
 
 
 function istft(stft::Array{Complex{T}, 2},
-                                   samplerate::Hertz,
+                                   samplerate::Unitful.Frequency,
                                    windowsize::Int = 2 * (size(stft, 1) - 1),
                                    hopsize::Int = windowsize >> 2;
                                    nfft::Int = windowsize,
                                    window::Union{Function, AbstractVector, Nothing} = hanning) where {T <: AbstractFloat}
     istft(stft,
-            ustrip(samplerate),
+            ustrip(uconvert(Hz, samplerate)),
             windowsize,
             hopsize;
             nfft,
@@ -187,11 +187,11 @@ end
 
 
 function istft(stft::Array{Complex{T}, 3},
-                                   samplerate::Hertz,
+                                   samplerate::Unitful.Frequency,
                                    windowsize::Int = 2 * (size(stft, 1) - 1),
                                    hopsize::Int = windowsize >> 2; kwargs...) where {T <: AbstractFloat}
     istft(stft,
-            ustrip(samplerate),
+            ustrip(uconvert(Hz, samplerate)),
             windowsize,
             hopsize;
             kwargs...)

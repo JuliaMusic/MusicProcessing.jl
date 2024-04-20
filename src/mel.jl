@@ -43,10 +43,10 @@ end
 """"""
 function mel_to_hz(mels::Union{F, AbstractArray{F}}) where {F <: Real}
     f_min = 0f0
-    f_sp = 200f0 / 3
-    frequencies = collect(f_min + f_sp * mels)
+    f_sp  = 200f0 / 3
+    frequencies = collect(f_min .+ f_sp * mels)
 
-    min_log_hz = 1000f0
+    min_log_hz  = 1000f0
     min_log_mel = (min_log_hz - f_min) / f_sp
     logstep = log(6.4f0) / 27f0
 
@@ -64,39 +64,39 @@ function mel_frequencies(nmels::Int = 128, fmin::Real = 0.0f0, fmax::Real = 1102
     min_mel = hz_to_mel(fmin)[1]
     max_mel = hz_to_mel(fmax)[1]
 
-    mels = linspace(min_mel, max_mel, nmels)
+    mels = LinRange(min_mel, max_mel, nmels)
     mel_to_hz(mels)
 end
 
 """"""
 function mel(samplerate::Real, nfft::Int, nmels::Int = 128, fmin::Real = 0f0, fmax::Real = samplerate/2f0)
-    weights = zeros(Float32, nmels, (nfft >> 1) + 1)
+    weights  = zeros(Float32, nmels, (nfft >> 1) + 1)
     fftfreqs = fft_frequencies(samplerate, nfft)
     melfreqs = mel_frequencies(nmels + 2, fmin, fmax)
-    enorm = 2f0 ./ (melfreqs[3:end] - melfreqs[1:nmels])
+    enorm    = 2f0 ./ (melfreqs[3:end] - melfreqs[1:nmels])
 
     for i = 1:nmels
-        lower = (fftfreqs - melfreqs[i]) / (melfreqs[i+1] - melfreqs[i])
-        upper = (melfreqs[i+2] - fftfreqs) / (melfreqs[i+2] - melfreqs[i+1])
+        lower = (fftfreqs   .- melfreqs[i]) / (melfreqs[i+1] - melfreqs[i])
+        upper = (melfreqs[i+2] .- fftfreqs) / (melfreqs[i+2] - melfreqs[i+1])
 
-        weights[i, :] = max(0, min(lower, upper)) * enorm[i]
+        weights[i, :] = max.(0, min(lower, upper)) * enorm[i]
     end
 
-    weights
+    return (weights)
 end
 
 function melspectrogram(audio::SampleBuf{T, 1}, windowsize::Int = 1024, hopsize::Int = windowsize >> 2;
-                        nmels::Int = 128, fmin::Real = 0f0, fmax::Real = audio.samplerate.val / 2f0) where T
-    samplerate = audio.samplerate.val
+                        nmels::Int = 128, fmin::Real = 0f0, fmax::Real = audio.samplerate / 2f0) where T
+    samplerate = audio.samplerate
     nfft = DSP.nextfastfft(windowsize)
     S = spectrogram(audio, windowsize, hopsize).power
     data = mel(samplerate, nfft, nmels, fmin, fmax) * S
     nframe = size(data, 2)
-    MelSpectrogram(data, linspace(hz_to_mel(fmin)[1], hz_to_mel(fmax)[1], nmels), (0.0:nframe-1) * hopsize / samplerate)
+    MelSpectrogram(data, LinRange(hz_to_mel(fmin)[1], hz_to_mel(fmax)[1], nmels), (0.0:nframe-1) * hopsize / samplerate)
 end
 
 function mfcc(audio::SampleBuf{T, 1}, windowsize::Int = 1024, hopsize::Int = windowsize >> 2;
-              nmfcc::Int = 20, nmels::Int = 128, fmin::Real = 0f0, fmax::Real = audio.samplerate.val / 2f0) where T
+              nmfcc::Int = 20, nmels::Int = 128, fmin::Real = 0f0, fmax::Real = audio.samplerate / 2f0) where T
     if nmfcc >= nmels
         error("number of mfcc components should be less than the number of mel frequency bins")
     end

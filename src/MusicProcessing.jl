@@ -9,15 +9,13 @@ using SampledSignals
 using Statistics
 using Unitful
 using Unitful: ns, ms, µs, s, Hz, kHz, MHz, GHz, THz
-using LinearAlgebra: mul!
+using LinearAlgebra: mul!, norm
 import SampledSignals: mono, nchannels, nframes
 
 # types used for fixed-point 16-bit and 32-bit encoding
 const PCM16Sample = Fixed{Int16, 15}
 const PCM32Sample = Fixed{Int32, 31}
 
-const Seconds = Unitful.Quantity{Int64, Unitful.𝐓,Unitful.FreeUnits{(s,),Unitful.𝐓,nothing}}
-const Hertz = Unitful.Quantity{Int64,Unitful.𝐓^-1,Unitful.FreeUnits{(Hz,),Unitful.𝐓^-1,nothing}}
 export Hz, kHz, s, ..
 export PCM16Sample, PCM32Sample
 
