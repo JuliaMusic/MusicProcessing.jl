@@ -1,7 +1,7 @@
 name = "MusicProcessing"
 uuid = "32bb9398-a9ad-408c-b137-8304ef5cbed9"
 repo = "https://github.com/JuliaMusic/MusicProcessing.jl.git"
-version = "1.8.1"
+version = "2.0.0"
 
 [deps]
 DSP = "717857b8-e6f2-59f4-9121-6e50c889abd2"
