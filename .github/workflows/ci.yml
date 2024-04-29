@@ -1,4 +1,5 @@
 name: CI
+
 on:
   pull_request:
     branches:
@@ -7,6 +8,7 @@ on:
     branches:
       - master
     tags: '*'
+
 jobs:
   test:
     name: Tests, Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
@@ -17,20 +19,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version:
-          - '1'
-        os:  [ubuntu-latest, windows-latest, macos-latest]
-        arch:
-          - x64
+        version: [1.6, 1]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        arch: [x64]
     steps:
-      # Cancel ongoing CI test runs if pushing to branch again before the previous tests
-      # have finished
-      - name: Cancel ongoing test runs for previous commits
-        uses: styfle/cancel-workflow-action@0.12.1
-        with:
-          access_token: ${{ github.token }}
-
-      # Do tests
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
         with:
