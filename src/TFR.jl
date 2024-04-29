@@ -24,11 +24,11 @@ end
 
 """"""
 function spectrogram(audio::SampleBuf{T, N},
-                           windowsize::Seconds,
-                           hopsize::Seconds = windowsize / 4;
+                           windowsize::Unitful.Time,
+                           hopsize::Unitful.Time = windowsize / 4;
                            kwargs...) where {T, N}
-    w = round(Int, ustrip(windowsize) * audio.samplerate)
-    h = round(Int, ustrip(hopsize) * audio.samplerate)
+    w = round(Int, ustrip(uconvert(s, windowsize)) * audio.samplerate)
+    h = round(Int, ustrip(uconvert(s, hopsize   )) * audio.samplerate)
     spectrogram(audio, w, h; kwargs...)
 end
 
@@ -46,11 +46,11 @@ end
 function stft(audio::SampleBuf{T, 2},
                  windowsize::Int = 1024,
                  hopsize::Int = windowsize >> 2; kwargs...) where T
-    nchannels = size(audio.data, 2)
+    nchannel = size(audio.data, 2)
     noverlap = windowsize - hopsize
 
-    stft = Array{Matrix{Complex{Float32}}}(undef, nchannels) # type that DSP.stft outputs
-    for i in 1:nchannels
+    stft = Array{Matrix{Complex{Float32}}}(undef, nchannel) # type that DSP.stft outputs
+    for i = 1:nchannel
         stft[i] = DSP.stft(audio.data[:, i], windowsize, noverlap; kwargs...)
     end
     cat(stft..., dims=3)
@@ -58,10 +58,10 @@ end
 
 """"""
 function stft(audio::SampleBuf{T, N},
-                    windowsize::Seconds,
-                    hopsize::Seconds = windowsize / 4; kwargs...) where {T, N}
-    w = round(Int, ustrip(windowsize) * audio.samplerate)
-    h = round(Int, ustrip(hopsize) * audio.samplerate)
+                    windowsize::Unitful.Time,
+                    hopsize::Unitful.Time = windowsize / 4; kwargs...) where {T, N}
+    w = round(Int, ustrip(uconvert(s, windowsize)) * audio.samplerate)
+    h = round(Int, ustrip(uconvert(s, hopsize   )) * audio.samplerate)
     stft(audio, w, h; kwargs...)
 end
 
@@ -112,17 +112,17 @@ function istft(stft::Array{Complex{T}, 2},
     base = Base.unsafe_convert(Ptr{Complex{T}}, stft)
     stride = nbins * sizeof(Complex{T})
 
-    @inbounds for i in 1:columns
+    @inbounds for i = 1:columns
         irfft!(spectrum, base + stride * (i-1), nfft)
 
         left = (i-1) * hopsize
-        for j in 1:windowsize
+        for j = 1:windowsize
             audio[left + j] += window[j] * spectrum[j]
             weights[left + j] += window[j]
         end
     end
 
-    @inbounds for i in 1:length(audio)
+    @inbounds for i in eachindex(audio)
         if weights[i] > eps(T)
             audio[i] /= weights[i]
         end
@@ -133,15 +133,15 @@ end
 
 
 function istft(stft::Array{Complex{T}, 2},
-                                   samplerate::Hertz,
+                                   samplerate::Unitful.Frequency,
                                    windowsize::Int = 2 * (size(stft, 1) - 1),
                                    hopsize::Int = windowsize >> 2;
                                    nfft::Int = windowsize,
                                    window::Union{Function, AbstractVector, Nothing} = hanning) where {T <: AbstractFloat}
     istft(stft,
-            ustrip(samplerate),
+            ustrip(uconvert(Hz, samplerate)),
             windowsize,
-            hopsize,
+            hopsize;
             nfft,
             window)
 end
@@ -163,18 +163,18 @@ function istft(stft::Array{Complex{T}, 3},
                                    samplerate::Real,
                                    windowsize::Int = 2 * (size(stft, 1) - 1),
                                    hopsize::Int = windowsize >> 2; kwargs...) where {T <: AbstractFloat}
-    nchannels = size(stft, 3)
-    buffers = Vector{SampleBuf}(undef, nchannels)
+    nchannel = size(stft, 3)
+    buffers  = Vector{SampleBuf}(undef, nchannel)
 
     # run ISTFT for each channel
-    for i = 1:nchannels
+    for i = 1:nchannel
         buffers[i] = istft(stft[:, :, i], samplerate, windowsize, hopsize; kwargs...)
     end
 
     nsamples = size(buffers[1], 1)
-    audio = Array{T}(undef, nsamples, nchannels)
+    audio = Array{T}(undef, nsamples, nchannel)
 
-    for i = 1:nchannels
+    for i = 1:nchannel
         audio[:, i] = buffers[i].data
     end
 
@@ -187,11 +187,11 @@ end
 
 
 function istft(stft::Array{Complex{T}, 3},
-                                   samplerate::Hertz,
+                                   samplerate::Unitful.Frequency,
                                    windowsize::Int = 2 * (size(stft, 1) - 1),
                                    hopsize::Int = windowsize >> 2; kwargs...) where {T <: AbstractFloat}
     istft(stft,
-            ustrip(samplerate),
+            ustrip(uconvert(Hz, samplerate)),
             windowsize,
             hopsize;
             kwargs...)
@@ -207,9 +207,9 @@ function phase_vocoder(stft::Array{Complex{T}, 2},
                                            hopsize::Int = (size(stft, 1) - 1) >> 1) where {T <: AbstractFloat}
 
     nbins = size(stft, 1)
-    nframes = size(stft, 2)
+    nframe = size(stft, 2)
     nfft = (nbins - 1) * 2
-    timesteps = 1f0:speed:nframes
+    timesteps = 1f0:speed:nframe
     stretched = zeros(Complex{T}, nbins, length(timesteps))
     phase_advance = collect(range(0f0, T(π * hopsize), length=nbins))
     phase_acc = map(angle, stft[:,1])
@@ -226,7 +226,7 @@ function phase_vocoder(stft::Array{Complex{T}, 2},
 
         # weighting for linear magnitude interpolation
         alpha = step % 1f0
-        if left < nframes
+        if left < nframe
             for i = 1:nbins
                 mag[i] = (1f0 - alpha) * abs(stft[i, left]) + alpha * abs(stft[i, right])
             end
@@ -239,7 +239,7 @@ function phase_vocoder(stft::Array{Complex{T}, 2},
         # store to output array
         cis!(cis_phase, phase_acc)
         multiply!(cis_phase, cis_phase, mag)
-        for i in 1:nbins
+        for i = 1:nbins
             stretched[i, t] = cis_phase[i]
         end
 
@@ -248,7 +248,7 @@ function phase_vocoder(stft::Array{Complex{T}, 2},
             break
         end
 
-        for i in 1:nbins
+        for i = 1:nbins
             angle1[i] = map(angle, stft[i, left])
             angle2[i] = map(angle,stft[i, right])
             # compute phase advance

@@ -1,18 +1,5 @@
-module MusicProcessingTest
+using TestItemRunner
 
-using MusicProcessing
-using Test
+@testitem "audio.jl" begin include("audio.jl") end
 
-tests = [
-    "audio.jl",
-]
-
-for t in tests
-    @testset "$t" begin
-        include(t)
-    end
-end
-
-end
-
-
+@run_package_tests verbose=true

@@ -3,11 +3,11 @@
 tofloat(array::AbstractArray{T}) where T = map(Float32, array)
 tofloat(array::AbstractArray{Float32}) = array
 
-fft_frequencies(samplerate::Real, nfft::Int) = collect(linspace(0f0, samplerate / 2f0, (nfft >> 1) + 1))
+fft_frequencies(samplerate::Real, nfft::Int) = collect(LinRange(0f0, samplerate / 2f0, (nfft >> 1) + 1))
 
 
 """returns the number of frames when the signal is partitioned into overlapping frames"""
-nframes(length::Int, framesize::Int, hopsize::Int) = div(length - framesize, hopsize) + 1
+nframes_hops(length::Int, framesize::Int, hopsize::Int) = div(length - framesize, hopsize) + 1
 
 """Provides a view of a signal partitioned into overlapping frames, similar to MATLAB's buffer"""
 struct FrameView{T<:AbstractVector} <: AbstractVector{Vector}
@@ -19,7 +19,7 @@ struct FrameView{T<:AbstractVector} <: AbstractVector{Vector}
     function FrameView(original, framesize, hopsize)
         # n = noverlap is a problem - the algorithm will not terminate.
         #@boundscheck((0 < hopsize <= framesize), error("hopsize must be between zero and framesize"))
-        new{T}(original, framesize, hopsize, nframes(length(original), framesize, hopsize))
+        new{T}(original, framesize, hopsize, nframes_hops(length(original), framesize, hopsize))
     end
 end
 
@@ -42,10 +42,10 @@ end
 
 """returns the DCT filters"""
 function dct(nfilters::Int, ninput::Int)
-    basis = Array(Float32, nfilters, ninput)
+    basis = zeros(Float32, nfilters, ninput)
     samples = (1f0:2f0:2ninput) * π / 2ninput
     for i = 1:nfilters
-        basis[i, :] = cos(i * samples)
+        basis[i, :] = cos.(i * samples)
     end
 
     basis *= sqrt(2f0/ninput)
@@ -56,7 +56,7 @@ end
 function zero_crossings(array::AbstractVector{T}, size::Int = length(array), offset::Int = 0) where {T<:Real}
     result = 0
     previous = 0
-    for i in offset .+ (1:size)
+    for i in (1:size) .+ offset
         number = array[i]
         sgn = number == 0 ? 0 : number > 0 ? 1 : -1
         if sgn != previous

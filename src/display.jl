@@ -47,17 +47,17 @@ end
 
 """Display multichannel spectrogram"""
 function Base.show(io::IO, mime::MIME"image/png", tfrs::Array{R, 1}) where {R <: DSP.Periodograms.TFR}
-    nchannels = length(tfrs)
+    nchannel = length(tfrs)
 
     @eval import PyPlot
     PyPlot.ioff()
     PyPlot.figure(figsize=(8, 8))
 
-    for i = 1:nchannels
-        PyPlot.subplot(nchannels, 1, i)
+    for i = 1:nchannel
+        PyPlot.subplot(nchannel, 1, i)
         draw_heatmap(tfrs[i])
 
-        if i != nchannels
+        if i != nchannel
             PyPlot.gca()[:get_xaxis]()[:set_visible](false)
             PyPlot.gca()[:spines]["bottom"][:set_visible](false)
         end
