@@ -21,7 +21,7 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 [compat]
 DSP = "0.6.10, 0.7, 0.8"
 Documenter = "0.27, 1"
-FFTW = "1.4 - 1.8"
+FFTW = "1.4 - 1.8, 1"
 FixedPointNumbers = "0.8"
 IntervalSets = "0.5, 0.6, 0.7"
 LinearAlgebra = "1"
