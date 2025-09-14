@@ -79,7 +79,7 @@ function mel(samplerate::Real, nfft::Int, nmels::Int = 128, fmin::Real = 0f0, fm
         lower = (fftfreqs   .- melfreqs[i]) / (melfreqs[i+1] - melfreqs[i])
         upper = (melfreqs[i+2] .- fftfreqs) / (melfreqs[i+2] - melfreqs[i+1])
 
-        weights[i, :] = max.(0, min(lower, upper)) * enorm[i]
+        weights[i, :] = max.(0, min.(lower, upper)) * enorm[i]
     end
 
     return (weights)
