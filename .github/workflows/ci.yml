@@ -19,15 +19,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [1.6, 1]
+        version: ['lts', '1']
         os: [ubuntu-latest, windows-latest, macos-latest]
         arch: [x64]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-      - uses: julia-actions/cache@v1
+      - uses: julia-actions/cache@v3
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
