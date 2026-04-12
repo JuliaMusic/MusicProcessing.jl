@@ -20,9 +20,7 @@ export Hz, kHz, s, ..
 export PCM16Sample, PCM32Sample
 
 include("audio.jl")
-include("chroma.jl")
 include("complex.jl")
-include("constantq.jl")
 include("mel.jl")
 include("TFR.jl")
 include("util.jl")
