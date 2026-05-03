@@ -27,7 +27,7 @@ include("util.jl")
 
 export AbstractSampleBuf, SampleBuf, SpectrumBuf, mono, nchannels, nframes
 export resample, duration, play, pitchshift, speedup, slowdown, zero_crossing_rate
-export melspectrogram, mfcc
+export MelSpectrogram, melspectrogram, mfcc
 export spectrogram, stft, istft, phase_vocoder
 
 function __init__()
